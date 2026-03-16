@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { MOCK_STATIONS } from '@/lib/mock-data';
-import { Search, User, X, Phone } from 'lucide-react';
+import { Search, User, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
@@ -15,10 +15,10 @@ export default function Home() {
     .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Mocking the "Recent" list based on user image references
+  // Updated Recent list per user request: Mobile station first with X icon
   const recentItems = [
-    { id: 'shafa', name: 'Shafamc', icon: X, iconClass: 'bg-slate-200 text-slate-500' },
-    { id: 'mobil-marian', name: 'Mobile number', icon: Phone, iconClass: 'bg-blue-600 text-white' }
+    { id: 'mobil-marian', name: 'Mobile', icon: X, iconClass: 'bg-slate-200 text-slate-500' },
+    { id: 'shafa', name: 'Shafa', icon: X, iconClass: 'bg-slate-200 text-slate-500' }
   ];
 
   return (
@@ -48,8 +48,8 @@ export default function Home() {
           <div className="space-y-1">
             {recentItems.map((item) => (
               <Link 
-                href={item.id === 'shafa' ? '/map?id=shafa' : '/map?id=mobil-marian'} 
-                key={item.name} 
+                href={`/map?id=${item.id}`} 
+                key={item.id} 
                 className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
               >
                 <div className={`size-11 rounded-full flex items-center justify-center shrink-0 ${item.iconClass}`}>
