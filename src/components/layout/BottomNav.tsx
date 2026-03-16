@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Home, Calculator, MessageSquare, Bell } from 'lucide-react';
+import { Map, Home, Bell, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -11,8 +11,8 @@ export function BottomNav() {
   const navItems = [
     { label: 'Home', icon: Home, href: '/' },
     { label: 'Map', icon: Map, href: '/map' },
-    { label: 'Calc', icon: Calculator, href: '/calculator' },
-    { label: 'Feedback', icon: MessageSquare, href: '/feedback' },
+    { label: 'Updates', icon: Bell, href: '/updates' },
+    { label: 'Favs', icon: Heart, href: '/favourites' },
   ];
 
   return (
