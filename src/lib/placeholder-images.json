@@ -1,33 +1,33 @@
 {
   "placeholderImages": [
     {
-      "id": "station-1",
-      "description": "Total Energies Filling Station",
-      "imageUrl": "https://picsum.photos/seed/total/600/400",
+      "id": "mobil-marian",
+      "description": "Mobil Marian Road",
+      "imageUrl": "https://picsum.photos/seed/mobil-marian/600/400",
       "imageHint": "fuel station"
     },
     {
-      "id": "station-2",
-      "description": "NNPC Retail Station",
-      "imageUrl": "https://picsum.photos/seed/nnpc/600/400",
+      "id": "uddy-king-parliamentary",
+      "description": "Uddy King Parliamentary",
+      "imageUrl": "https://picsum.photos/seed/uddy-parl/600/400",
       "imageHint": "gas station"
     },
     {
-      "id": "station-3",
-      "description": "Mobil Filling Station",
-      "imageUrl": "https://picsum.photos/seed/mobil/600/400",
+      "id": "shafa",
+      "description": "Shafa Energy Highway",
+      "imageUrl": "https://picsum.photos/seed/shafa/600/400",
       "imageHint": "petrol station"
     },
     {
-      "id": "station-4",
-      "description": "Rainoil Station",
-      "imageUrl": "https://picsum.photos/seed/rainoil/600/400",
+      "id": "uddy-king-effio-ette",
+      "description": "Uddy King Effio-Ette",
+      "imageUrl": "https://picsum.photos/seed/uddy-effio/600/400",
       "imageHint": "gasoline pump"
     },
     {
-      "id": "station-5",
-      "description": "Ardova PLC",
-      "imageUrl": "https://picsum.photos/seed/ardova/600/400",
+      "id": "nnpc-highway",
+      "description": "NNPC Mega Station",
+      "imageUrl": "https://picsum.photos/seed/nnpc-cal/600/400",
       "imageHint": "energy station"
     }
   ]
