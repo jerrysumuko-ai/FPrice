@@ -1,84 +1,96 @@
+
 "use client"
 
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { MOCK_STATIONS, NEWS_ALERTS } from '@/lib/mock-data';
-import { StationCard } from '@/components/stations/StationCard';
-import { Search, Bell, AlertTriangle, TrendingUp } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MOCK_STATIONS } from '@/lib/mock-data';
+import { Search, User, X, Phone } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 export default function Home() {
   const [search, setSearch] = useState('');
 
   const filteredStations = MOCK_STATIONS
     .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 5);
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  // Mocking the "Recent" list based on user image references
+  const recentItems = [
+    { id: 'shafa', name: 'Shafamc', icon: X, iconClass: 'bg-slate-200 text-slate-500' },
+    { id: 'mobil-marian', name: 'Mobile number', icon: Phone, iconClass: 'bg-blue-600 text-white' }
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header & Search */}
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">Calabar FuelFinder</h1>
-          <p className="text-muted-foreground">Live fuel prices across Cross River State.</p>
-        </div>
-
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4 group-focus-within:text-primary transition-colors" />
-          <Input 
-            placeholder="Search stations by name..." 
-            className="pl-10 h-12 bg-card border-none shadow-sm focus-visible:ring-primary"
+    <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8">
+      {/* Simple Search Header */}
+      <div className="p-4 pt-6 sticky top-0 bg-white z-10">
+        <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl px-4 h-14">
+          <Search className="text-slate-600 size-6 mr-3" />
+          <input 
+            placeholder="Search" 
+            className="bg-transparent border-none outline-none flex-1 text-xl text-slate-900 placeholder:text-slate-500 font-normal"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <Avatar className="size-9 bg-slate-300 ml-2 border border-slate-200">
+            <AvatarFallback className="bg-slate-400">
+              <User className="size-6 text-white" />
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
 
-      {/* Price Alert News */}
-      {NEWS_ALERTS.map((alert) => (
-        <Alert key={alert.id} className="bg-primary/5 border-primary/20 animate-in fade-in slide-in-from-top-4">
-          <TrendingUp className="size-4 text-primary" />
-          <AlertTitle className="text-primary font-bold">Price Increment Alert!</AlertTitle>
-          <AlertDescription className="text-sm">
-            {alert.content} <span className="font-bold opacity-70 ml-2">— {alert.date}</span>
-          </AlertDescription>
-        </Alert>
-      ))}
+      <div className="px-4">
+        {/* RECENT Section */}
+        <div className="mt-4">
+          <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">Recent</h2>
+          <div className="space-y-1">
+            {recentItems.map((item) => (
+              <Link 
+                href={item.id === 'shafa' ? '/map?id=shafa' : '/map?id=mobil-marian'} 
+                key={item.name} 
+                className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
+              >
+                <div className={`size-11 rounded-full flex items-center justify-center shrink-0 ${item.iconClass}`}>
+                  <item.icon className="size-6" />
+                </div>
+                <div className="flex-1 py-1">
+                  <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">{item.name}</div>
+                  <Separator className="mt-4 bg-slate-100" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
 
-      {/* Tabs / Filtered List */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-accent/50 w-full justify-start overflow-x-auto h-auto p-1 gap-1">
-          <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-white px-6">Live Prices</TabsTrigger>
-          <TabsTrigger value="favorites" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-white px-6">Favorites</TabsTrigger>
-          <TabsTrigger value="recent" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-white px-6">Recent</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredStations.map((station, idx) => (
-              <StationCard 
+        {/* A-Z Section */}
+        <div className="mt-6 pb-24">
+          <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">A—Z</h2>
+          <div className="space-y-1">
+            {filteredStations.map((station) => (
+              <Link 
+                href={`/map?id=${station.id}`} 
                 key={station.id} 
-                station={station} 
-                priority={idx === 0 && search.length > 0}
-              />
+                className="block py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors"
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <div className="text-[17px] font-medium text-slate-800">{station.name}</div>
+                  <div className="text-primary font-bold">₦{station.petrolPrice}</div>
+                </div>
+                <div className="text-sm text-slate-400 font-normal">
+                  {station.address}
+                </div>
+              </Link>
             ))}
             {filteredStations.length === 0 && (
-              <div className="col-span-full py-12 text-center text-muted-foreground">
-                <Search className="size-12 mx-auto mb-4 opacity-20" />
-                <p>No stations found matching "{search}"</p>
+              <div className="py-12 text-center text-slate-400 italic">
+                No matching stations found
               </div>
             )}
           </div>
-        </TabsContent>
-        <TabsContent value="favorites" className="py-12 text-center text-muted-foreground">
-           <p>Your favorited stations will appear here.</p>
-        </TabsContent>
-        <TabsContent value="recent" className="py-12 text-center text-muted-foreground">
-           <p>Recently visited stations will appear here.</p>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
