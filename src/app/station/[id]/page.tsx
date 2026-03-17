@@ -2,12 +2,13 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { MOCK_STATIONS } from '@/lib/mock-data';
-import { ArrowLeft, Send, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function StationDetailPage() {
   const { id } = useParams();
@@ -17,12 +18,14 @@ export default function StationDetailPage() {
 
   const [calcAmount, setCalcAmount] = useState('1000');
   const [feedback, setFeedback] = useState('');
+  const [selectedFuel, setSelectedFuel] = useState<'petrol' | 'diesel'>('petrol');
 
   if (!station) {
     return <div className="p-8 text-center">Station not found.</div>;
   }
 
-  const petrolLiters = (parseFloat(calcAmount) || 0) / station.petrolPrice;
+  const currentPrice = selectedFuel === 'petrol' ? station.petrolPrice : station.dieselPrice;
+  const liters = (parseFloat(calcAmount) || 0) / currentPrice;
 
   const handleFeedbackSubmit = () => {
     if (!feedback.trim()) return;
@@ -64,17 +67,43 @@ export default function StationDetailPage() {
 
       {/* Prices Grid */}
       <div className="p-4 grid grid-cols-2 gap-4">
-        <div className="bg-[#109D3E] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm">
+        <button 
+          onClick={() => setSelectedFuel('petrol')}
+          className={cn(
+            "bg-[#109D3E] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
+            selectedFuel === 'petrol' ? "ring-4 ring-blue-500 ring-offset-2 scale-[1.02]" : "opacity-80 hover:opacity-100"
+          )}
+        >
           <div className="text-lg font-bold">Petrol</div>
           <div className="text-2xl font-black">₦{station.petrolPrice}/L</div>
-        </div>
-        <div className="bg-[#3B4453] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm">
+          {selectedFuel === 'petrol' && (
+             <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-1 shadow-md">
+                <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+             </div>
+          )}
+        </button>
+        <button 
+          onClick={() => setSelectedFuel('diesel')}
+          className={cn(
+            "bg-[#3B4453] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
+            selectedFuel === 'diesel' ? "ring-4 ring-blue-500 ring-offset-2 scale-[1.02]" : "opacity-80 hover:opacity-100"
+          )}
+        >
           <div className="text-lg font-bold">Diesel</div>
           <div className="text-2xl font-black">₦{station.dieselPrice}/L</div>
-        </div>
+          {selectedFuel === 'diesel' && (
+             <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-1 shadow-md">
+                <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+             </div>
+          )}
+        </button>
       </div>
 
-      <Separator className="bg-slate-100" />
+      <div className="h-[1px] w-full bg-slate-100" />
 
       {/* Calculator Section */}
       <div className="p-4 space-y-4">
@@ -90,12 +119,12 @@ export default function StationDetailPage() {
           />
           
           <div className="bg-[#F1F3F4] p-4 rounded-lg text-[17px] font-medium text-slate-900">
-            ₦{Number(calcAmount).toLocaleString() || '0'} → {isNaN(petrolLiters) ? '0.00' : petrolLiters.toFixed(2)}L Petrol
+            ₦{Number(calcAmount).toLocaleString() || '0'} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
           </div>
         </div>
       </div>
 
-      <Separator className="bg-slate-100" />
+      <div className="h-[1px] w-full bg-slate-100" />
 
       {/* Feedback Section */}
       <div className="p-4 space-y-4">
@@ -116,8 +145,4 @@ export default function StationDetailPage() {
       </div>
     </div>
   );
-}
-
-function Separator({ className }: { className?: string }) {
-  return <div className={`h-[1px] w-full ${className}`} />;
 }
