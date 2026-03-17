@@ -3,10 +3,20 @@
 
 import { useState, useEffect } from 'react';
 import { MOCK_STATIONS, FuelStation } from '@/lib/mock-data';
-import { Search, User, X, Fuel } from 'lucide-react';
+import { Search, User, Fuel } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
+
+const MobilIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 40" className={className} xmlns="http://www.w3.org/2000/svg">
+    <text x="0" y="30" style={{ font: 'bold 28px sans-serif' }}>
+      <tspan fill="#0059B3">M</tspan>
+      <tspan fill="#E6192E">o</tspan>
+      <tspan fill="#0059B3">bil</tspan>
+    </text>
+  </svg>
+);
 
 export default function Home() {
   const [search, setSearch] = useState('');
@@ -23,6 +33,11 @@ export default function Home() {
   const filteredStations = MOCK_STATIONS
     .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const isMobilStation = (name: string) => {
+    const lower = name.toLowerCase();
+    return lower.includes('mobil') || lower.includes('mobile');
+  };
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8">
@@ -51,19 +66,23 @@ export default function Home() {
             <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">Recent</h2>
             <div className="space-y-1">
               {recentStations.map((station) => {
-                const isMobile = station.name.toLowerCase().includes('mobile');
+                const isMobil = isMobilStation(station.name);
                 return (
                   <Link 
                     href={`/station/${station.id}`} 
                     key={station.id} 
                     className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
                   >
-                    <div className={isMobile ? "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-200 text-slate-500" : "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-400"}>
-                      {isMobile ? <X className="size-6" /> : <Fuel className="size-5" />}
+                    <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
+                      {isMobil ? (
+                        <MobilIcon className="w-8 h-auto" />
+                      ) : (
+                        <Fuel className="size-5 text-slate-400" />
+                      )}
                     </div>
                     <div className="flex-1 py-1">
                       <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">
-                        {isMobile ? 'Mobile' : station.name.split(' ')[0]}
+                        {isMobil ? 'Mobil' : station.name.split(' ')[0]}
                       </div>
                       <Separator className="mt-4 bg-slate-100" />
                     </div>
@@ -79,15 +98,19 @@ export default function Home() {
           <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">A—Z</h2>
           <div className="space-y-1">
             {filteredStations.map((station) => {
-              const isMobile = station.name.toLowerCase().includes('mobile');
+              const isMobil = isMobilStation(station.name);
               return (
                 <Link 
                   href={`/station/${station.id}`} 
                   key={station.id} 
                   className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
                 >
-                  <div className={isMobile ? "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-200 text-slate-500" : "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-400"}>
-                    {isMobile ? <X className="size-6" /> : <Fuel className="size-5" />}
+                  <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
+                    {isMobil ? (
+                      <MobilIcon className="w-8 h-auto" />
+                    ) : (
+                      <Fuel className="size-5 text-slate-400" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[17px] font-medium text-slate-800 truncate">{station.name}</div>

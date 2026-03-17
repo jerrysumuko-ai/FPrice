@@ -3,13 +3,23 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { MOCK_STATIONS } from '@/lib/mock-data';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, Fuel } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+
+const MobilIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 40" className={className} xmlns="http://www.w3.org/2000/svg">
+    <text x="0" y="30" style={{ font: 'bold 28px sans-serif' }}>
+      <tspan fill="#0059B3">M</tspan>
+      <tspan fill="#E6192E">o</tspan>
+      <tspan fill="#0059B3">bil</tspan>
+    </text>
+  </svg>
+);
 
 export default function StationDetailPage() {
   const { id } = useParams();
@@ -45,6 +55,8 @@ export default function StationDetailPage() {
     setFeedback('');
   };
 
+  const isMobil = station.name.toLowerCase().includes('mobil') || station.name.toLowerCase().includes('mobile');
+
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
       {/* Header */}
@@ -53,17 +65,13 @@ export default function StationDetailPage() {
           <ArrowLeft className="size-6 text-slate-800" />
         </button>
         <div className="flex items-center gap-2">
-          {station.name.toLowerCase().includes('mobile') ? (
-            <div className="bg-slate-100 p-1.5 rounded-full text-slate-500">
-              <X className="size-5" />
-            </div>
-          ) : (
-            <div className="bg-green-100 p-1.5 rounded-full text-green-600">
-              <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8.12,20C11,20 14.27,15.5 17,12C18,11 20,10.12 21,8C22,5.88 21,4 21,4C21,4 19.12,3 17,4C14.88,5 14,7 13,8C11,10 8,13 8,13C8,13 11,10 13,8Z" />
-              </svg>
-            </div>
-          )}
+          <div className="size-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden p-1">
+            {isMobil ? (
+              <MobilIcon className="w-full h-auto" />
+            ) : (
+              <Fuel className="size-5 text-slate-400" />
+            )}
+          </div>
           <h1 className="text-xl font-bold text-slate-900">{station.name}</h1>
         </div>
       </header>
