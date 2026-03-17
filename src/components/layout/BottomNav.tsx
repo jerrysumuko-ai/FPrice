@@ -12,7 +12,7 @@ export function BottomNav() {
     { label: 'Home', icon: Home, href: '/' },
     { label: 'Map', icon: Map, href: '/map' },
     { label: 'Updates', icon: Bell, href: '/updates' },
-    { label: 'Favs', icon: Heart, href: '/favourites' },
+    { label: 'Favourite', icon: Heart, href: '/favourites' },
   ];
 
   return (
