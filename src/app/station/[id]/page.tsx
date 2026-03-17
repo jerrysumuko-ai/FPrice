@@ -3,13 +3,23 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { MOCK_STATIONS } from '@/lib/mock-data';
-import { ArrowLeft, Fuel } from 'lucide-react';
+import { ArrowLeft, Fuel, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
 
 const MobilIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 40" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -44,22 +54,15 @@ const ShafaIcon = ({ className }: { className?: string }) => (
 const UddyKingIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
     <g transform="translate(10, 5)">
-      {/* Flame Layers */}
       <path d="M40 55 C 10 35, 15 15, 40 0 C 65 15, 70 35, 40 55" fill="#E6192E" />
       <path d="M40 50 C 20 35, 25 20, 40 8 C 55 20, 60 35, 40 50" fill="#F37021" />
       <path d="M40 45 C 30 35, 32 25, 40 18 C 48 25, 50 35, 40 45" fill="#FFD700" />
-      
-      {/* Crown Points */}
       <path d="M10 75 L20 50 L30 68 L40 45 L50 68 L60 50 L70 75 L70 88 L10 88 Z" fill="#DAA520" stroke="#8B4513" strokeWidth="1" />
-      
-      {/* Gem Details */}
       <circle cx="10" cy="75" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
       <circle cx="20" cy="50" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
       <circle cx="40" cy="45" r="4" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
       <circle cx="60" cy="50" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
       <circle cx="70" cy="75" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
-      
-      {/* Base Band Gems */}
       <circle cx="25" cy="81" r="2.5" fill="#B22222" />
       <circle cx="40" cy="81" r="2.5" fill="#B22222" />
       <circle cx="55" cy="81" r="2.5" fill="#B22222" />
@@ -70,13 +73,10 @@ const UddyKingIcon = ({ className }: { className?: string }) => (
 const NNPCIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
     <g transform="translate(5, 5)">
-      {/* The Geometric Ribbon */}
-      <path d="M5 20 L25 10 L25 65 L5 75 Z" fill="#F0E100" /> {/* Yellow left */}
-      <path d="M25 10 L85 25 L85 80 L25 65 Z" fill="#1B6D44" /> {/* Dark Green center */}
-      <path d="M25 65 L45 55 L85 80 Z" fill="#29B462" /> {/* Light Green triangle */}
-      <path d="M5 75 L25 65 L45 85 L5 95 Z" fill="#E31E24" /> {/* Red bottom */}
-      
-      {/* NNPC Text */}
+      <path d="M5 20 L25 10 L25 65 L5 75 Z" fill="#F0E100" />
+      <path d="M25 10 L85 25 L85 80 L25 65 Z" fill="#1B6D44" />
+      <path d="M25 65 L45 55 L85 80 Z" fill="#29B462" />
+      <path d="M5 75 L25 65 L45 85 L5 95 Z" fill="#E31E24" />
       <text x="50" y="85" style={{ font: 'bold 24px sans-serif' }} fill="#555555">NNPC</text>
     </g>
   </svg>
@@ -91,6 +91,10 @@ export default function StationDetailPage() {
   const [calcAmount, setCalcAmount] = useState('1000');
   const [feedback, setFeedback] = useState('');
   const [selectedFuel, setSelectedFuel] = useState<'petrol' | 'diesel'>('petrol');
+  
+  const [newPetrolPrice, setNewPetrolPrice] = useState('');
+  const [newDieselPrice, setNewDieselPrice] = useState('');
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -116,6 +120,17 @@ export default function StationDetailPage() {
     setFeedback('');
   };
 
+  const handleReportPrice = () => {
+    if (!newPetrolPrice && !newDieselPrice) return;
+    toast({
+      title: "Price Reported",
+      description: "Our team will verify the updated rates shortly. Thank you!",
+    });
+    setIsReportDialogOpen(false);
+    setNewPetrolPrice('');
+    setNewDieselPrice('');
+  };
+
   const isMobil = station.name.toLowerCase().includes('mobil') || station.name.toLowerCase().includes('mobile');
   const isShafa = station.name.toLowerCase().includes('shafa');
   const isUddyKing = station.name.toLowerCase().includes('uddy king');
@@ -123,7 +138,6 @@ export default function StationDetailPage() {
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
-      {/* Header */}
       <header className="flex items-center p-4 border-b">
         <button onClick={() => router.back()} className="mr-4">
           <ArrowLeft className="size-6 text-slate-800" />
@@ -146,12 +160,10 @@ export default function StationDetailPage() {
         </div>
       </header>
 
-      {/* Last Updated Bar */}
       <div className="bg-slate-50 px-4 py-2 text-right border-b">
         <span className="text-xs text-slate-500">Last updated: {station.lastUpdated}</span>
       </div>
 
-      {/* Prices Grid */}
       <div className="p-4 grid grid-cols-2 gap-4">
         <button 
           onClick={() => setSelectedFuel('petrol')}
@@ -191,10 +203,8 @@ export default function StationDetailPage() {
 
       <div className="h-[1px] w-full bg-slate-100" />
 
-      {/* Calculator Section */}
       <div className="p-4 space-y-4">
         <h2 className="text-lg font-bold text-slate-800">Fuel Calculator</h2>
-        
         <div className="space-y-3">
           <Input 
             value={calcAmount}
@@ -203,7 +213,6 @@ export default function StationDetailPage() {
             className="h-12 border-slate-200"
             type="number"
           />
-          
           <div className="bg-[#F1F3F4] p-4 rounded-lg text-[17px] font-medium text-slate-900">
             ₦{Number(calcAmount).toLocaleString() || '0'} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
           </div>
@@ -212,7 +221,6 @@ export default function StationDetailPage() {
 
       <div className="h-[1px] w-full bg-slate-100" />
 
-      {/* Feedback Section */}
       <div className="p-4 space-y-4">
         <div className="relative border border-slate-200 rounded-xl p-3 focus-within:ring-2 ring-primary/20">
           <Textarea 
@@ -229,9 +237,54 @@ export default function StationDetailPage() {
           Submit
         </Button>
         <div className="text-center">
-          <button className="text-[15px] font-medium text-slate-900 hover:opacity-80 transition-opacity">
-            <span className="text-red-600">Report</span> new price
-          </button>
+          <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+            <DialogTrigger asChild>
+              <button className="text-[15px] font-medium text-slate-900 hover:opacity-80 transition-opacity">
+                <span className="text-red-600">Report</span> new price
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] rounded-2xl md:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="size-5 text-red-600" />
+                  Report New Price
+                </DialogTitle>
+                <DialogDescription>
+                  Help the community by updating the current rates at {station.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="petrol-report">Petrol Price (₦/Litre)</Label>
+                  <Input 
+                    id="petrol-report" 
+                    type="number" 
+                    placeholder={station.petrolPrice.toString()}
+                    value={newPetrolPrice}
+                    onChange={(e) => setNewPetrolPrice(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="diesel-report">Diesel Price (₦/Litre)</Label>
+                  <Input 
+                    id="diesel-report" 
+                    type="number" 
+                    placeholder={station.dieselPrice.toString()}
+                    value={newDieselPrice}
+                    onChange={(e) => setNewDieselPrice(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={handleReportPrice}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold h-12 rounded-xl"
+                >
+                  Submit Report
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
