@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -133,8 +132,8 @@ export default function Home() {
       </div>
 
       <div className="px-4">
-        {/* RECENT Section */}
-        {recentStations.length > 0 && (
+        {/* RECENT Section - Only shown when search is empty */}
+        {recentStations.length > 0 && !search && (
           <div className="mt-4">
             <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">Recent</h2>
             <div className="space-y-1">
