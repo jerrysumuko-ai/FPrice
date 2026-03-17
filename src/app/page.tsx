@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -74,7 +75,6 @@ export default function Home() {
               >
                 <div className="flex justify-between items-center mb-1">
                   <div className="text-[17px] font-medium text-slate-800">{station.name}</div>
-                  <div className="text-primary font-bold">₦{station.petrolPrice}</div>
                 </div>
                 <div className="text-sm text-slate-400 font-normal">
                   {station.address}
