@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useParams, useRouter } from 'next/navigation';
@@ -6,7 +7,7 @@ import { ArrowLeft, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,14 @@ export default function StationDetailPage() {
   const [calcAmount, setCalcAmount] = useState('1000');
   const [feedback, setFeedback] = useState('');
   const [selectedFuel, setSelectedFuel] = useState<'petrol' | 'diesel'>('petrol');
+
+  useEffect(() => {
+    if (id) {
+      const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
+      const newRecent = [id, ...recent.filter((i: string) => i !== id)].slice(0, 3);
+      localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
+    }
+  }, [id]);
 
   if (!station) {
     return <div className="p-8 text-center">Station not found.</div>;
@@ -44,7 +53,6 @@ export default function StationDetailPage() {
           <ArrowLeft className="size-6 text-slate-800" />
         </button>
         <div className="flex items-center gap-2">
-          {/* Custom Logo logic: use X icon for Mobile, placeholder leaf for others */}
           {station.name.toLowerCase().includes('mobile') ? (
             <div className="bg-slate-100 p-1.5 rounded-full text-slate-500">
               <X className="size-5" />

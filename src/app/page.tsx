@@ -1,24 +1,28 @@
 
 "use client"
 
-import { useState } from 'react';
-import { MOCK_STATIONS } from '@/lib/mock-data';
-import { Search, User, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MOCK_STATIONS, FuelStation } from '@/lib/mock-data';
+import { Search, User, X, Fuel } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 
 export default function Home() {
   const [search, setSearch] = useState('');
+  const [recentStations, setRecentStations] = useState<FuelStation[]>([]);
+
+  useEffect(() => {
+    const storedRecentIds = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
+    const items = storedRecentIds
+      .map((id: string) => MOCK_STATIONS.find(s => s.id === id))
+      .filter(Boolean) as FuelStation[];
+    setRecentStations(items);
+  }, []);
 
   const filteredStations = MOCK_STATIONS
     .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));
-
-  const recentItems = [
-    { id: 'mobil-marian', name: 'Mobile', icon: X, iconClass: 'bg-slate-200 text-slate-500' },
-    { id: 'shafa', name: 'Shafa', icon: X, iconClass: 'bg-slate-200 text-slate-500' }
-  ];
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8">
@@ -42,26 +46,33 @@ export default function Home() {
 
       <div className="px-4">
         {/* RECENT Section */}
-        <div className="mt-4">
-          <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">Recent</h2>
-          <div className="space-y-1">
-            {recentItems.map((item) => (
-              <Link 
-                href={`/station/${item.id}`} 
-                key={item.id} 
-                className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
-              >
-                <div className={`size-11 rounded-full flex items-center justify-center shrink-0 ${item.iconClass}`}>
-                  <item.icon className="size-6" />
-                </div>
-                <div className="flex-1 py-1">
-                  <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">{item.name}</div>
-                  <Separator className="mt-4 bg-slate-100" />
-                </div>
-              </Link>
-            ))}
+        {recentStations.length > 0 && (
+          <div className="mt-4">
+            <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">Recent</h2>
+            <div className="space-y-1">
+              {recentStations.map((station) => {
+                const isMobile = station.name.toLowerCase().includes('mobile');
+                return (
+                  <Link 
+                    href={`/station/${station.id}`} 
+                    key={station.id} 
+                    className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
+                  >
+                    <div className={isMobile ? "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-200 text-slate-500" : "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-400"}>
+                      {isMobile ? <X className="size-6" /> : <Fuel className="size-5" />}
+                    </div>
+                    <div className="flex-1 py-1">
+                      <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">
+                        {isMobile ? 'Mobile' : station.name.split(' ')[0]}
+                      </div>
+                      <Separator className="mt-4 bg-slate-100" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* A-Z Section */}
         <div className="mt-6 pb-24">
