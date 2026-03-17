@@ -133,10 +133,6 @@ export default function FavouritesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
                       <div className="text-[17px] font-medium text-slate-800 truncate">{station.name}</div>
-                      <div className="flex items-center gap-1 text-[13px] font-bold text-slate-500">
-                        <Star className="size-3 fill-yellow-400 text-yellow-400" />
-                        {station.rating}
-                      </div>
                     </div>
                     <div className="text-sm text-slate-400 font-normal truncate flex items-center gap-1">
                       ₦{station.petrolPrice} / Litre • {station.address}
