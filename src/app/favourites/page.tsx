@@ -1,13 +1,22 @@
+
 "use client"
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Star, MapPin } from 'lucide-react';
-import { MOCK_STATIONS } from '@/lib/mock-data';
+import { MOCK_STATIONS, FuelStation } from '@/lib/mock-data';
 import Link from 'next/link';
 
 export default function FavouritesPage() {
-  // Show a couple of stations as "favourites" for demonstration
-  const favStations = MOCK_STATIONS.slice(0, 2);
+  const [favStations, setFavStations] = useState<FuelStation[]>([]);
+
+  useEffect(() => {
+    const favIds = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
+    const items = favIds
+      .map((id: string) => MOCK_STATIONS.find(s => s.id === id))
+      .filter(Boolean) as FuelStation[];
+    setFavStations(items);
+  }, []);
 
   return (
     <div className="space-y-6">

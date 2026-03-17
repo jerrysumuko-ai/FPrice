@@ -3,7 +3,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { MOCK_STATIONS } from '@/lib/mock-data';
-import { ArrowLeft, Fuel, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Fuel, AlertTriangle, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -95,12 +95,18 @@ export default function StationDetailPage() {
   const [newPetrolPrice, setNewPetrolPrice] = useState('');
   const [newDieselPrice, setNewDieselPrice] = useState('');
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isFavourite, setIsFavourite] = useState(false);
 
   useEffect(() => {
     if (id) {
+      // Handle recent stations
       const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
       const newRecent = [id, ...recent.filter((i: string) => i !== id)].slice(0, 3);
       localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
+
+      // Handle favourites check
+      const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
+      setIsFavourite(favs.includes(id));
     }
   }, [id]);
 
@@ -118,6 +124,21 @@ export default function StationDetailPage() {
       description: "Thank you for sharing your experience!",
     });
     setFeedback('');
+  };
+
+  const toggleFavourite = () => {
+    const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
+    let newFavs;
+    if (favs.includes(id)) {
+      newFavs = favs.filter((i: string) => i !== id);
+      setIsFavourite(false);
+      toast({ title: "Removed from Favourites" });
+    } else {
+      newFavs = [...favs, id];
+      setIsFavourite(true);
+      toast({ title: "Added to Favourites" });
+    }
+    localStorage.setItem('fuel_finder_favs', JSON.stringify(newFavs));
   };
 
   const handleReportPrice = () => {
@@ -138,26 +159,34 @@ export default function StationDetailPage() {
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
-      <header className="flex items-center p-4 border-b">
-        <button onClick={() => router.back()} className="mr-4">
-          <ArrowLeft className="size-6 text-slate-800" />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="size-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden p-1">
-            {isMobil ? (
-              <MobilIcon className="w-full h-auto" />
-            ) : isShafa ? (
-              <ShafaIcon className="w-full h-auto" />
-            ) : isUddyKing ? (
-              <UddyKingIcon className="w-full h-auto" />
-            ) : isNNPC ? (
-              <NNPCIcon className="w-full h-auto" />
-            ) : (
-              <Fuel className="size-5 text-slate-400" />
-            )}
+      <header className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center min-w-0">
+          <button onClick={() => router.back()} className="mr-4 shrink-0">
+            <ArrowLeft className="size-6 text-slate-800" />
+          </button>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="size-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden p-1">
+              {isMobil ? (
+                <MobilIcon className="w-full h-auto" />
+              ) : isShafa ? (
+                <ShafaIcon className="w-full h-auto" />
+              ) : isUddyKing ? (
+                <UddyKingIcon className="w-full h-auto" />
+              ) : isNNPC ? (
+                <NNPCIcon className="w-full h-auto" />
+              ) : (
+                <Fuel className="size-5 text-slate-400" />
+              )}
+            </div>
+            <h1 className="text-xl font-bold text-slate-900 truncate">{station.name}</h1>
           </div>
-          <h1 className="text-xl font-bold text-slate-900">{station.name}</h1>
         </div>
+        <button 
+          onClick={toggleFavourite} 
+          className="p-2 active:scale-90 transition-transform"
+        >
+          <Star className={cn("size-7 transition-colors", isFavourite ? "fill-yellow-400 text-yellow-400" : "text-slate-300")} />
+        </button>
       </header>
 
       <div className="bg-slate-50 px-4 py-2 text-right border-b">
