@@ -150,6 +150,11 @@ export default function StationDetailPage() {
         >
           Submit
         </Button>
+        <div className="text-center">
+          <button className="text-[15px] font-medium text-slate-900 hover:opacity-80 transition-opacity">
+            <span className="text-red-600">Report</span> new price
+          </button>
+        </div>
       </div>
     </div>
   );
