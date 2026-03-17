@@ -64,6 +64,21 @@ const UddyKingIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const NNPCIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(5, 5)">
+      {/* The Geometric Ribbon */}
+      <path d="M5 20 L25 10 L25 65 L5 75 Z" fill="#F0E100" /> {/* Yellow left */}
+      <path d="M25 10 L85 25 L85 80 L25 65 Z" fill="#1B6D44" /> {/* Dark Green center */}
+      <path d="M25 65 L45 55 L85 80 Z" fill="#29B462" /> {/* Light Green triangle */}
+      <path d="M5 75 L25 65 L45 85 L5 95 Z" fill="#E31E24" /> {/* Red bottom */}
+      
+      {/* NNPC Text */}
+      <text x="50" y="85" style={{ font: 'bold 24px sans-serif' }} fill="#555555">NNPC</text>
+    </g>
+  </svg>
+);
+
 export default function Home() {
   const [search, setSearch] = useState('');
   const [recentStations, setRecentStations] = useState<FuelStation[]>([]);
@@ -91,6 +106,10 @@ export default function Home() {
 
   const isUddyKingStation = (name: string) => {
     return name.toLowerCase().includes('uddy king');
+  };
+
+  const isNNPCStation = (name: string) => {
+    return name.toLowerCase().includes('nnpc');
   };
 
   return (
@@ -123,6 +142,7 @@ export default function Home() {
                 const isMobil = isMobilStation(station.name);
                 const isShafa = isShafaStation(station.name);
                 const isUddyKing = isUddyKingStation(station.name);
+                const isNNPC = isNNPCStation(station.name);
                 return (
                   <Link 
                     href={`/station/${station.id}`} 
@@ -136,13 +156,15 @@ export default function Home() {
                         <ShafaIcon className="w-10 h-auto" />
                       ) : isUddyKing ? (
                         <UddyKingIcon className="w-8 h-auto" />
+                      ) : isNNPC ? (
+                        <NNPCIcon className="w-10 h-auto" />
                       ) : (
                         <Fuel className="size-5 text-slate-400" />
                       )}
                     </div>
                     <div className="flex-1 py-1">
                       <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">
-                        {isMobil ? 'Mobil' : isShafa ? 'Shafa' : isUddyKing ? 'Uddy King' : station.name.split(' ')[0]}
+                        {isMobil ? 'Mobil' : isShafa ? 'Shafa' : isUddyKing ? 'Uddy King' : isNNPC ? 'NNPC' : station.name.split(' ')[0]}
                       </div>
                       <Separator className="mt-4 bg-slate-100" />
                     </div>
@@ -161,6 +183,7 @@ export default function Home() {
               const isMobil = isMobilStation(station.name);
               const isShafa = isShafaStation(station.name);
               const isUddyKing = isUddyKingStation(station.name);
+              const isNNPC = isNNPCStation(station.name);
               return (
                 <Link 
                   href={`/station/${station.id}`} 
@@ -174,6 +197,8 @@ export default function Home() {
                       <ShafaIcon className="w-10 h-auto" />
                     ) : isUddyKing ? (
                       <UddyKingIcon className="w-8 h-auto" />
+                    ) : isNNPC ? (
+                      <NNPCIcon className="w-10 h-auto" />
                     ) : (
                       <Fuel className="size-5 text-slate-400" />
                     )}

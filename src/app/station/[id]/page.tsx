@@ -67,6 +67,21 @@ const UddyKingIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const NNPCIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(5, 5)">
+      {/* The Geometric Ribbon */}
+      <path d="M5 20 L25 10 L25 65 L5 75 Z" fill="#F0E100" /> {/* Yellow left */}
+      <path d="M25 10 L85 25 L85 80 L25 65 Z" fill="#1B6D44" /> {/* Dark Green center */}
+      <path d="M25 65 L45 55 L85 80 Z" fill="#29B462" /> {/* Light Green triangle */}
+      <path d="M5 75 L25 65 L45 85 L5 95 Z" fill="#E31E24" /> {/* Red bottom */}
+      
+      {/* NNPC Text */}
+      <text x="50" y="85" style={{ font: 'bold 24px sans-serif' }} fill="#555555">NNPC</text>
+    </g>
+  </svg>
+);
+
 export default function StationDetailPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -104,6 +119,7 @@ export default function StationDetailPage() {
   const isMobil = station.name.toLowerCase().includes('mobil') || station.name.toLowerCase().includes('mobile');
   const isShafa = station.name.toLowerCase().includes('shafa');
   const isUddyKing = station.name.toLowerCase().includes('uddy king');
+  const isNNPC = station.name.toLowerCase().includes('nnpc');
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
@@ -120,6 +136,8 @@ export default function StationDetailPage() {
               <ShafaIcon className="w-full h-auto" />
             ) : isUddyKing ? (
               <UddyKingIcon className="w-full h-auto" />
+            ) : isNNPC ? (
+              <NNPCIcon className="w-full h-auto" />
             ) : (
               <Fuel className="size-5 text-slate-400" />
             )}
