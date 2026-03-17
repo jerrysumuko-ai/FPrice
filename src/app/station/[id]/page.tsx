@@ -41,6 +41,23 @@ const ShafaIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const UddyKingIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(10, 5)">
+      {/* Flame */}
+      <path d="M40 50 Q 10 20 40 0 Q 70 20 40 50" fill="#FF4500" />
+      <path d="M40 45 Q 20 25 40 10 Q 60 25 40 45" fill="#FFD700" />
+      {/* Crown */}
+      <path d="M10 70 L20 50 L30 65 L40 45 L50 65 L60 50 L70 70 L70 85 L10 85 Z" fill="#DAA520" stroke="#8B4513" strokeWidth="2" />
+      <circle cx="10" cy="70" r="3" fill="#B22222" />
+      <circle cx="20" cy="50" r="3" fill="#B22222" />
+      <circle cx="40" cy="45" r="4" fill="#B22222" />
+      <circle cx="60" cy="50" r="3" fill="#B22222" />
+      <circle cx="70" cy="70" r="3" fill="#B22222" />
+    </g>
+  </svg>
+);
+
 export default function StationDetailPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -77,6 +94,7 @@ export default function StationDetailPage() {
 
   const isMobil = station.name.toLowerCase().includes('mobil') || station.name.toLowerCase().includes('mobile');
   const isShafa = station.name.toLowerCase().includes('shafa');
+  const isUddyKing = station.name.toLowerCase().includes('uddy king');
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
@@ -91,6 +109,8 @@ export default function StationDetailPage() {
               <MobilIcon className="w-full h-auto" />
             ) : isShafa ? (
               <ShafaIcon className="w-full h-auto" />
+            ) : isUddyKing ? (
+              <UddyKingIcon className="w-full h-auto" />
             ) : (
               <Fuel className="size-5 text-slate-400" />
             )}
