@@ -19,7 +19,7 @@ export default function FavouritesPage() {
       {favStations.length > 0 ? (
         <div className="grid gap-4">
           {favStations.map((station) => (
-            <Link href={`/map?id=${station.id}`} key={station.id}>
+            <Link href={`/station/${station.id}`} key={station.id}>
               <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm hover:bg-slate-50 transition-colors">
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
