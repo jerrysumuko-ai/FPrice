@@ -78,20 +78,26 @@ export default function Home() {
         <div className="mt-6 pb-24">
           <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">A—Z</h2>
           <div className="space-y-1">
-            {filteredStations.map((station) => (
-              <Link 
-                href={`/station/${station.id}`} 
-                key={station.id} 
-                className="block py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors"
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <div className="text-[17px] font-medium text-slate-800">{station.name}</div>
-                </div>
-                <div className="text-sm text-slate-400 font-normal">
-                  {station.address}
-                </div>
-              </Link>
-            ))}
+            {filteredStations.map((station) => {
+              const isMobile = station.name.toLowerCase().includes('mobile');
+              return (
+                <Link 
+                  href={`/station/${station.id}`} 
+                  key={station.id} 
+                  className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
+                >
+                  <div className={isMobile ? "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-200 text-slate-500" : "size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-400"}>
+                    {isMobile ? <X className="size-6" /> : <Fuel className="size-5" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[17px] font-medium text-slate-800 truncate">{station.name}</div>
+                    <div className="text-sm text-slate-400 font-normal truncate">
+                      {station.address}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
             {filteredStations.length === 0 && (
               <div className="py-12 text-center text-slate-400 italic">
                 No matching stations found
