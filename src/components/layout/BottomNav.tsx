@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Heart } from 'lucide-react';
+import { Home, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -10,7 +10,7 @@ export function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: Home, href: '/' },
-    { label: 'Favourite', icon: Heart, href: '/favourites' },
+    { label: 'Favourite', icon: Star, href: '/favourites' },
   ];
 
   return (
