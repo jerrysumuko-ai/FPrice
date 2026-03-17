@@ -18,6 +18,26 @@ const MobilIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const ShafaIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 200 80" className={className} xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(0, 10)">
+      <text x="10" y="50" style={{ font: 'italic 900 50px sans-serif', letterSpacing: '-2px' }} fill="#E31E24">Shafa</text>
+      <text x="80" y="70" style={{ font: '900 16px sans-serif' }} fill="#F37021">ENERGY</text>
+      <g transform="translate(165, 35) scale(0.5)">
+         {[...Array(12)].map((_, i) => (
+           <ellipse 
+             key={i}
+             cx="0" cy="0" rx="35" ry="12" 
+             fill={i % 2 === 0 ? "#E31E24" : "#F37021"}
+             transform={`rotate(${i * 30})`}
+             opacity="0.9"
+           />
+         ))}
+      </g>
+    </g>
+  </svg>
+);
+
 export default function Home() {
   const [search, setSearch] = useState('');
   const [recentStations, setRecentStations] = useState<FuelStation[]>([]);
@@ -37,6 +57,10 @@ export default function Home() {
   const isMobilStation = (name: string) => {
     const lower = name.toLowerCase();
     return lower.includes('mobil') || lower.includes('mobile');
+  };
+
+  const isShafaStation = (name: string) => {
+    return name.toLowerCase().includes('shafa');
   };
 
   return (
@@ -67,6 +91,7 @@ export default function Home() {
             <div className="space-y-1">
               {recentStations.map((station) => {
                 const isMobil = isMobilStation(station.name);
+                const isShafa = isShafaStation(station.name);
                 return (
                   <Link 
                     href={`/station/${station.id}`} 
@@ -76,13 +101,15 @@ export default function Home() {
                     <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
                       {isMobil ? (
                         <MobilIcon className="w-8 h-auto" />
+                      ) : isShafa ? (
+                        <ShafaIcon className="w-10 h-auto" />
                       ) : (
                         <Fuel className="size-5 text-slate-400" />
                       )}
                     </div>
                     <div className="flex-1 py-1">
                       <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">
-                        {isMobil ? 'Mobil' : station.name.split(' ')[0]}
+                        {isMobil ? 'Mobil' : isShafa ? 'Shafa' : station.name.split(' ')[0]}
                       </div>
                       <Separator className="mt-4 bg-slate-100" />
                     </div>
@@ -99,6 +126,7 @@ export default function Home() {
           <div className="space-y-1">
             {filteredStations.map((station) => {
               const isMobil = isMobilStation(station.name);
+              const isShafa = isShafaStation(station.name);
               return (
                 <Link 
                   href={`/station/${station.id}`} 
@@ -108,6 +136,8 @@ export default function Home() {
                   <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
                     {isMobil ? (
                       <MobilIcon className="w-8 h-auto" />
+                    ) : isShafa ? (
+                      <ShafaIcon className="w-10 h-auto" />
                     ) : (
                       <Fuel className="size-5 text-slate-400" />
                     )}

@@ -21,6 +21,26 @@ const MobilIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const ShafaIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 200 80" className={className} xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(0, 10)">
+      <text x="10" y="50" style={{ font: 'italic 900 50px sans-serif', letterSpacing: '-2px' }} fill="#E31E24">Shafa</text>
+      <text x="80" y="70" style={{ font: '900 16px sans-serif' }} fill="#F37021">ENERGY</text>
+      <g transform="translate(165, 35) scale(0.5)">
+         {[...Array(12)].map((_, i) => (
+           <ellipse 
+             key={i}
+             cx="0" cy="0" rx="35" ry="12" 
+             fill={i % 2 === 0 ? "#E31E24" : "#F37021"}
+             transform={`rotate(${i * 30})`}
+             opacity="0.9"
+           />
+         ))}
+      </g>
+    </g>
+  </svg>
+);
+
 export default function StationDetailPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -56,6 +76,7 @@ export default function StationDetailPage() {
   };
 
   const isMobil = station.name.toLowerCase().includes('mobil') || station.name.toLowerCase().includes('mobile');
+  const isShafa = station.name.toLowerCase().includes('shafa');
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
@@ -68,6 +89,8 @@ export default function StationDetailPage() {
           <div className="size-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden p-1">
             {isMobil ? (
               <MobilIcon className="w-full h-auto" />
+            ) : isShafa ? (
+              <ShafaIcon className="w-full h-auto" />
             ) : (
               <Fuel className="size-5 text-slate-400" />
             )}
