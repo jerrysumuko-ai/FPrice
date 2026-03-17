@@ -44,16 +44,25 @@ const ShafaIcon = ({ className }: { className?: string }) => (
 const UddyKingIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
     <g transform="translate(10, 5)">
-      {/* Flame */}
-      <path d="M40 50 Q 10 20 40 0 Q 70 20 40 50" fill="#FF4500" />
-      <path d="M40 45 Q 20 25 40 10 Q 60 25 40 45" fill="#FFD700" />
-      {/* Crown */}
-      <path d="M10 70 L20 50 L30 65 L40 45 L50 65 L60 50 L70 70 L70 85 L10 85 Z" fill="#DAA520" stroke="#8B4513" strokeWidth="2" />
-      <circle cx="10" cy="70" r="3" fill="#B22222" />
-      <circle cx="20" cy="50" r="3" fill="#B22222" />
-      <circle cx="40" cy="45" r="4" fill="#B22222" />
-      <circle cx="60" cy="50" r="3" fill="#B22222" />
-      <circle cx="70" cy="70" r="3" fill="#B22222" />
+      {/* Flame Layers */}
+      <path d="M40 55 C 10 35, 15 15, 40 0 C 65 15, 70 35, 40 55" fill="#E6192E" />
+      <path d="M40 50 C 20 35, 25 20, 40 8 C 55 20, 60 35, 40 50" fill="#F37021" />
+      <path d="M40 45 C 30 35, 32 25, 40 18 C 48 25, 50 35, 40 45" fill="#FFD700" />
+      
+      {/* Crown Points */}
+      <path d="M10 75 L20 50 L30 68 L40 45 L50 68 L60 50 L70 75 L70 88 L10 88 Z" fill="#DAA520" stroke="#8B4513" strokeWidth="1" />
+      
+      {/* Gem Details */}
+      <circle cx="10" cy="75" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
+      <circle cx="20" cy="50" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
+      <circle cx="40" cy="45" r="4" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
+      <circle cx="60" cy="50" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
+      <circle cx="70" cy="75" r="3" fill="#B22222" stroke="#4A0000" strokeWidth="0.5" />
+      
+      {/* Base Band Gems */}
+      <circle cx="25" cy="81" r="2.5" fill="#B22222" />
+      <circle cx="40" cy="81" r="2.5" fill="#B22222" />
+      <circle cx="55" cy="81" r="2.5" fill="#B22222" />
     </g>
   </svg>
 );
