@@ -99,12 +99,10 @@ export default function StationDetailPage() {
 
   useEffect(() => {
     if (id) {
-      // Handle recent stations
       const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
       const newRecent = [id, ...recent.filter((i: string) => i !== id)].slice(0, 3);
       localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
 
-      // Handle favourites check
       const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
       setIsFavourite(favs.includes(id));
     }
@@ -132,11 +130,9 @@ export default function StationDetailPage() {
     if (favs.includes(id)) {
       newFavs = favs.filter((i: string) => i !== id);
       setIsFavourite(false);
-      toast({ title: "Removed from Favourites" });
     } else {
       newFavs = [...favs, id];
       setIsFavourite(true);
-      toast({ title: "Added to Favourites" });
     }
     localStorage.setItem('fuel_finder_favs', JSON.stringify(newFavs));
   };
