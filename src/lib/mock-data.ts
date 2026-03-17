@@ -10,12 +10,13 @@ export interface FuelStation {
   lat: number;
   lng: number;
   image: string;
+  lastUpdated: string;
 }
 
 export const MOCK_STATIONS: FuelStation[] = [
   {
     id: 'mobil-marian',
-    name: 'Mobil (Mobile) Marian',
+    name: 'Mobile (Mobile) Marian',
     address: 'Marian Road, Calabar',
     petrolPrice: 650,
     dieselPrice: 1100,
@@ -24,7 +25,8 @@ export const MOCK_STATIONS: FuelStation[] = [
     rating: 4.8,
     lat: 4.965,
     lng: 8.335,
-    image: 'https://picsum.photos/seed/mobil-marian/600/400'
+    image: 'https://picsum.photos/seed/mobil-marian/600/400',
+    lastUpdated: '10:32 AM'
   },
   {
     id: 'uddy-king-parliamentary',
@@ -37,7 +39,8 @@ export const MOCK_STATIONS: FuelStation[] = [
     rating: 4.4,
     lat: 4.982,
     lng: 8.342,
-    image: 'https://picsum.photos/seed/uddy-parl/600/400'
+    image: 'https://picsum.photos/seed/uddy-parl/600/400',
+    lastUpdated: '09:45 AM'
   },
   {
     id: 'shafa',
@@ -50,7 +53,8 @@ export const MOCK_STATIONS: FuelStation[] = [
     rating: 4.2,
     lat: 4.995,
     lng: 8.338,
-    image: 'https://picsum.photos/seed/shafa/600/400'
+    image: 'https://picsum.photos/seed/shafa/600/400',
+    lastUpdated: '11:15 AM'
   },
   {
     id: 'uddy-king-effio-ette',
@@ -63,7 +67,8 @@ export const MOCK_STATIONS: FuelStation[] = [
     rating: 4.5,
     lat: 4.972,
     lng: 8.348,
-    image: 'https://picsum.photos/seed/uddy-effio/600/400'
+    image: 'https://picsum.photos/seed/uddy-effio/600/400',
+    lastUpdated: '10:50 AM'
   },
   {
     id: 'nnpc-highway',
@@ -76,7 +81,8 @@ export const MOCK_STATIONS: FuelStation[] = [
     rating: 4.1,
     lat: 5.012,
     lng: 8.331,
-    image: 'https://picsum.photos/seed/nnpc-cal/600/400'
+    image: 'https://picsum.photos/seed/nnpc-cal/600/400',
+    lastUpdated: '08:20 AM'
   }
 ];
 

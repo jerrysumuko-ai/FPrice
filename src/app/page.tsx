@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -15,7 +14,6 @@ export default function Home() {
     .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Updated Recent list per user request: Mobile station first with X icon
   const recentItems = [
     { id: 'mobil-marian', name: 'Mobile', icon: X, iconClass: 'bg-slate-200 text-slate-500' },
     { id: 'shafa', name: 'Shafa', icon: X, iconClass: 'bg-slate-200 text-slate-500' }
@@ -48,7 +46,7 @@ export default function Home() {
           <div className="space-y-1">
             {recentItems.map((item) => (
               <Link 
-                href={`/map?id=${item.id}`} 
+                href={`/station/${item.id}`} 
                 key={item.id} 
                 className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
               >
@@ -70,7 +68,7 @@ export default function Home() {
           <div className="space-y-1">
             {filteredStations.map((station) => (
               <Link 
-                href={`/map?id=${station.id}`} 
+                href={`/station/${station.id}`} 
                 key={station.id} 
                 className="block py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors"
               >
