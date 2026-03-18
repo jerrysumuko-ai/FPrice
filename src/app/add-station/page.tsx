@@ -1,4 +1,3 @@
-
 "use client"
 
 import { ArrowLeft, Camera } from 'lucide-react';
@@ -73,9 +72,9 @@ export default function AddStationPage() {
             </div>
           </div>
 
-          {/* Address */}
+          {/* Station Address */}
           <div className="space-y-2">
-            <Label htmlFor="address" className="text-slate-700 font-semibold">Address</Label>
+            <Label htmlFor="address" className="text-slate-700 font-semibold">Station Address</Label>
             <Input 
               id="address" 
               placeholder="Enter full address" 
