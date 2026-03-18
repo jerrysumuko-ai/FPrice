@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { MOCK_STATIONS, FuelStation } from '@/lib/mock-data';
-import { Search, User, Fuel } from 'lucide-react';
+import { Search, Fuel } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 
 const MobilIcon = ({ className }: { className?: string }) => (
@@ -123,11 +122,6 @@ export default function Home() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <Avatar className="size-9 bg-slate-300 ml-2 border border-slate-200">
-            <AvatarFallback className="bg-slate-400">
-              <User className="size-6 text-white" />
-            </AvatarFallback>
-          </Avatar>
         </div>
       </div>
 
