@@ -1,18 +1,51 @@
 "use client"
 
-import { ArrowLeft, Camera } from 'lucide-react';
+import { ArrowLeft, Camera, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 export default function AddStationPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Please select an image smaller than 2MB.",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLogoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +84,51 @@ export default function AddStationPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Upload Logo Section */}
+          <div className="flex flex-col items-center justify-center py-2 space-y-2">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange}
+            />
+            <div 
+              onClick={handleLogoClick}
+              className="relative group cursor-pointer"
+            >
+              <div className="size-32 rounded-full border-2 border-dashed border-slate-300 flex flex-col items-center justify-center space-y-1 bg-slate-50/50 hover:bg-slate-100 transition-all overflow-hidden relative">
+                {logoPreview ? (
+                  <>
+                    <Image 
+                      src={logoPreview} 
+                      alt="Logo preview" 
+                      fill 
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="size-8 text-white" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Camera className="size-8 text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Upload Logo</span>
+                  </>
+                )}
+              </div>
+              {logoPreview && (
+                <button 
+                  onClick={removeLogo}
+                  className="absolute -top-1 -right-1 bg-slate-800 text-white rounded-full p-1 shadow-md hover:bg-slate-900 transition-colors"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium">PNG or JPG, max 2MB</p>
+          </div>
+
           {/* Station Name */}
           <div className="space-y-2">
             <Label htmlFor="station-name" className="text-slate-700 font-semibold">Station Name</Label>
@@ -60,16 +138,6 @@ export default function AddStationPage() {
               className="h-14 bg-white border-slate-200 rounded-lg text-lg"
               required
             />
-          </div>
-
-          {/* Upload Logo Section */}
-          <div className="flex justify-center py-2">
-            <div className="relative group cursor-pointer">
-              <div className="size-32 rounded-full border-2 border-dashed border-slate-300 flex flex-col items-center justify-center space-y-1 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                <Camera className="size-8 text-slate-400" />
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Upload Logo</span>
-              </div>
-            </div>
           </div>
 
           {/* Station Address */}
