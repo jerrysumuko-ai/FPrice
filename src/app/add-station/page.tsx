@@ -60,7 +60,7 @@ export default function AddStationPage() {
     
     toast({
       title: "Station Registered",
-      description: "Your station has been submitted for verification.",
+      description: "Your station has been submitted successfully.",
     });
     router.push('/profile');
   };
@@ -183,17 +183,13 @@ export default function AddStationPage() {
           </div>
 
           {/* Submit Button */}
-          <div className="pt-4 space-y-6">
+          <div className="pt-4">
             <Button 
               type="submit"
               className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
             >
               Add Station
             </Button>
-            
-            <p className="text-center text-slate-400 text-sm">
-              Your station will be listed as 'Pending verification' initially.
-            </p>
           </div>
         </form>
       </div>
