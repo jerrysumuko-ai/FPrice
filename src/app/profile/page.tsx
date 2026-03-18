@@ -4,6 +4,7 @@
 import { ArrowLeft, Pencil, PlusCircle, ChevronRight, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -43,10 +44,12 @@ export default function ProfilePage() {
         <Separator className="mb-10" />
 
         {/* Primary Action Button */}
-        <button className="w-full h-16 bg-[#F24E1E] hover:bg-[#D9451B] active:scale-[0.98] transition-all text-white rounded-2xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg shadow-orange-100">
-          <PlusCircle className="size-7" />
-          Add Station
-        </button>
+        <Link href="/add-station" className="w-full">
+          <button className="w-full h-16 bg-[#F24E1E] hover:bg-[#D9451B] active:scale-[0.98] transition-all text-white rounded-2xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg shadow-orange-100">
+            <PlusCircle className="size-7" />
+            Add Station
+          </button>
+        </Link>
 
         {/* Menu Navigation */}
         <div className="w-full mt-10 space-y-0">
