@@ -1,4 +1,3 @@
-
 "use client"
 
 import { ArrowLeft, Pencil, PlusCircle, ChevronRight, User } from 'lucide-react';
@@ -63,8 +62,11 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Centered Logout Button */}
-        <button className="w-full h-16 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 active:scale-[0.99] text-slate-800 font-bold text-lg rounded-2xl mt-12 transition-all">
+        {/* Centered Logout Button - Links to Signup for Demo */}
+        <button 
+          onClick={() => router.push('/signup')}
+          className="w-full h-16 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 active:scale-[0.99] text-slate-800 font-bold text-lg rounded-2xl mt-12 transition-all"
+        >
           Logout
         </button>
       </div>
