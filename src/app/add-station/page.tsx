@@ -1,4 +1,3 @@
-
 "use client"
 
 import { ArrowLeft, Camera, X, Check, Info } from 'lucide-react';
@@ -20,7 +19,6 @@ export default function AddStationPage() {
   const [step, setStep] = useState<1 | 2>(1);
   
   // Step 1 State
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stationName, setStationName] = useState('');
   const [stationAddress, setStationAddress] = useState('');
@@ -30,6 +28,7 @@ export default function AddStationPage() {
   // Step 2 State
   const [petrolPrice, setPetrolPrice] = useState('680');
   const [dieselPrice, setDieselPrice] = useState('750');
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   const handleLogoClick = () => {
     fileInputRef.current?.click();
@@ -63,6 +62,10 @@ export default function AddStationPage() {
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
+    setStep(2);
+  };
+
+  const handleFinish = () => {
     if (!isAuthorized) {
       toast({
         variant: "destructive",
@@ -71,10 +74,7 @@ export default function AddStationPage() {
       });
       return;
     }
-    setStep(2);
-  };
-
-  const handleFinish = () => {
+    
     toast({
       title: "Station Registered",
       description: "Your station has been submitted successfully.",
@@ -188,21 +188,6 @@ export default function AddStationPage() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 pt-2">
-                <Checkbox 
-                  id="authorized" 
-                  checked={isAuthorized}
-                  onCheckedChange={(checked) => setIsAuthorized(checked as boolean)}
-                  className="size-6 border-slate-300 data-[state=checked]:bg-[#D9451B] data-[state=checked]:border-[#D9451B]"
-                />
-                <label
-                  htmlFor="authorized"
-                  className="text-sm font-medium text-slate-600 cursor-pointer leading-tight"
-                >
-                  I confirm I am authorized to manage this station
-                </label>
-              </div>
-
               <div className="pt-4">
                 <Button 
                   type="submit"
@@ -287,6 +272,21 @@ export default function AddStationPage() {
                     ₦ per liter
                   </div>
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-3 pt-2">
+                <Checkbox 
+                  id="authorized" 
+                  checked={isAuthorized}
+                  onCheckedChange={(checked) => setIsAuthorized(checked as boolean)}
+                  className="size-6 border-slate-300 data-[state=checked]:bg-[#D9451B] data-[state=checked]:border-[#D9451B]"
+                />
+                <label
+                  htmlFor="authorized"
+                  className="text-sm font-medium text-slate-600 cursor-pointer leading-tight"
+                >
+                  I confirm I am authorized to manage this station
+                </label>
               </div>
 
               {/* Info Box */}
