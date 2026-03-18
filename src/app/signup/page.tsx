@@ -35,13 +35,13 @@ export default function SignUpPage() {
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700 ml-1">Phone Number</Label>
               <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent">
-                <span className="text-lg font-bold text-slate-800 whitespace-nowrap">+234</span>
+                <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none">+234</span>
                 <div className="w-[1px] h-6 bg-slate-300 mx-4 shrink-0" />
                 <input 
                   id="phone"
                   type="tel"
                   placeholder="Enter your phone number"
-                  className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium"
+                  className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   required
