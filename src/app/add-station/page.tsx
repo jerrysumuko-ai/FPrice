@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ArrowLeft, Camera, X, Check, Info } from 'lucide-react';
@@ -9,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 export default function AddStationPage() {
   const router = useRouter();
@@ -174,8 +174,8 @@ export default function AddStationPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-slate-700 font-semibold">Phone Number</Label>
-                <div className="flex">
-                  <div className="flex items-center justify-center px-4 border border-r-0 border-slate-200 rounded-l-lg bg-slate-50 text-slate-800 font-bold text-lg">
+                <div className="flex h-14">
+                  <div className="flex items-center justify-center px-4 border border-r-0 border-slate-200 rounded-l-lg bg-slate-50 text-slate-800 font-bold text-lg leading-none">
                     +234
                   </div>
                   <Input 
@@ -183,7 +183,7 @@ export default function AddStationPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="optional" 
-                    className="h-14 bg-white border-slate-200 rounded-l-none rounded-r-lg text-lg"
+                    className="h-full bg-white border-slate-200 rounded-l-none rounded-r-lg text-lg"
                   />
                 </div>
               </div>
@@ -238,7 +238,7 @@ export default function AddStationPage() {
                   Petrol
                 </div>
                 <div className="p-4 relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">
                     ₦
                   </div>
                   <Input 
@@ -247,7 +247,7 @@ export default function AddStationPage() {
                     onChange={(e) => setPetrolPrice(e.target.value)}
                     className="h-14 pl-12 pr-24 text-xl font-bold bg-slate-50 border-none rounded-lg"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4 leading-none">
                     ₦ per liter
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function AddStationPage() {
                   Diesel
                 </div>
                 <div className="p-4 relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">
                     ₦
                   </div>
                   <Input 
@@ -268,7 +268,7 @@ export default function AddStationPage() {
                     onChange={(e) => setDieselPrice(e.target.value)}
                     className="h-14 pl-12 pr-24 text-xl font-bold bg-slate-50 border-none rounded-lg"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4 leading-none">
                     ₦ per liter
                   </div>
                 </div>
