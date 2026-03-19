@@ -13,7 +13,6 @@ export default function SignUpPage() {
 
   const handleSendCode = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate navigation to home after "signing up"
     router.push('/');
   };
 
@@ -31,11 +30,10 @@ export default function SignUpPage() {
           <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
           
           <form onSubmit={handleSendCode} className="space-y-6">
-            {/* Phone Input with Prefix and Separator */}
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700 ml-1">Phone Number</Label>
-              <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent">
-                <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none">+234</span>
+              <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none flex items-center h-full">+234</span>
                 <div className="w-[1px] h-6 bg-slate-300 mx-4 shrink-0" />
                 <input 
                   id="phone"
@@ -49,7 +47,6 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Reddish-Orange Action Button */}
             <Button 
               type="submit"
               className="w-full h-14 bg-[#C2410C] hover:bg-[#A6330A] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
