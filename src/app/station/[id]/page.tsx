@@ -290,7 +290,7 @@ export default function StationDetailPage() {
             type="number"
           />
           <div className="bg-[#F1F3F4] p-4 rounded-lg text-[17px] font-medium text-slate-900">
-            ₦{Number(calcAmount).toLocaleString() || '0'} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
+            ₦{Number(calcAmount || 0).toLocaleString('en-US')} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
           </div>
         </div>
       </div>
