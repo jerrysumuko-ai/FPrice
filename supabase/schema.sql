@@ -49,6 +49,22 @@ create table if not exists price_reports (
   created_at    timestamptz not null default now()
 );
 
+-- ---- TABLE-LEVEL GRANTS ----------------------------------------------------
+-- Tables created via raw SQL aren't exposed to the API roles by default.
+-- These grants make the tables visible to PostgREST; RLS policies below
+-- still control which rows each role can actually read/write.
+
+grant usage on schema public to anon, authenticated, service_role;
+
+grant select, insert on public.stations      to anon, authenticated;
+grant select         on public.news_alerts   to anon, authenticated;
+grant insert         on public.feedback      to anon, authenticated;
+grant insert         on public.price_reports to anon, authenticated;
+
+grant all on public.stations,      public.news_alerts,
+         public.feedback,      public.price_reports
+  to service_role;
+
 -- ---- ROW LEVEL SECURITY ----------------------------------------------------
 -- Public can READ stations and news (so anon key works in the browser).
 -- Public can INSERT feedback, price reports, and new station registrations
