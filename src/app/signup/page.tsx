@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -8,7 +7,9 @@ import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function SignUpPage() {
+  const [method, setMethod] = useState<'phone' | 'email'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const router = useRouter();
 
   const handleSendCode = (e: React.FormEvent) => {
@@ -28,24 +29,67 @@ export default function SignUpPage() {
         {/* Verification Section */}
         <div className="space-y-6 pt-2">
           <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
+
+          {/* Tabs */}
+          <div className="flex bg-[#F1F3F4] rounded-2xl p-1">
+            <button
+              type="button"
+              onClick={() => setMethod('phone')}
+              className={`flex-1 h-11 rounded-xl text-[14px] font-bold transition-all ${
+                method === 'phone'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Phone
+            </button>
+            <button
+              type="button"
+              onClick={() => setMethod('email')}
+              className={`flex-1 h-11 rounded-xl text-[14px] font-bold transition-all ${
+                method === 'email'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Email
+            </button>
+          </div>
           
           <form onSubmit={handleSendCode} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700 ml-1">Phone Number</Label>
-              <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
-                <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none flex items-center h-full">+234</span>
-                <div className="w-[1px] h-6 bg-slate-300 mx-4 shrink-0" />
-                <input 
-                  id="phone"
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                />
+            {method === 'phone' ? (
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700 ml-1">Phone Number</Label>
+                <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                  <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none flex items-center h-full">+234</span>
+                  <div className="w-[1px] h-6 bg-slate-300 mx-4 shrink-0" />
+                  <input 
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-[14px] font-semibold text-slate-700 ml-1">Email Address</Label>
+                <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                  <input 
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             <Button 
               type="submit"
