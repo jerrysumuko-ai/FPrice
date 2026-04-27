@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from 'react';
-import { Star, MapPin, Fuel, User } from 'lucide-react';
-import { MOCK_STATIONS, FuelStation } from '@/lib/mock-data';
+import { Star, Fuel } from 'lucide-react';
+import { FuelStation } from '@/lib/types';
+import { fetchStationsByIds } from '@/lib/supabase-queries';
 import Link from 'next/link';
-import { Separator } from '@/components/ui/separator';
 
 const MobilIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 40" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -23,9 +23,9 @@ const ShafaIcon = ({ className }: { className?: string }) => (
       <text x="80" y="70" style={{ font: '900 16px sans-serif' }} fill="#F37021">ENERGY</text>
       <g transform="translate(165, 35) scale(0.5)">
          {[...Array(12)].map((_, i) => (
-           <ellipse 
+           <ellipse
              key={i}
-             cx="0" cy="0" rx="35" ry="12" 
+             cx="0" cy="0" rx="35" ry="12"
              fill={i % 2 === 0 ? "#E31E24" : "#F37021"}
              transform={`rotate(${i * 30})`}
              opacity="0.9"
@@ -69,13 +69,29 @@ const NNPCIcon = ({ className }: { className?: string }) => (
 
 export default function FavouritesPage() {
   const [favStations, setFavStations] = useState<FuelStation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const favIds = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
-    const items = favIds
-      .map((id: string) => MOCK_STATIONS.find(s => s.id === id))
-      .filter(Boolean) as FuelStation[];
-    setFavStations(items);
+    let cancelled = false;
+    (async () => {
+      const favIds: string[] = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
+      if (favIds.length === 0) {
+        setFavStations([]);
+        setLoading(false);
+        return;
+      }
+      const items = await fetchStationsByIds(favIds);
+      if (cancelled) return;
+      // Preserve order from localStorage
+      const ordered = favIds
+        .map((id) => items.find((s) => s.id === id))
+        .filter(Boolean) as FuelStation[];
+      setFavStations(ordered);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const isMobilStation = (name: string) => {
@@ -103,18 +119,20 @@ export default function FavouritesPage() {
       </div>
 
       <div className="px-4 pb-24">
-        {favStations.length > 0 ? (
+        {loading ? (
+          <div className="py-20 text-center text-slate-400 italic">Loading...</div>
+        ) : favStations.length > 0 ? (
           <div className="space-y-1 mt-4">
             {favStations.map((station) => {
               const isMobil = isMobilStation(station.name);
               const isShafa = isShafaStation(station.name);
               const isUddyKing = isUddyKingStation(station.name);
               const isNNPC = isNNPCStation(station.name);
-              
+
               return (
-                <Link 
-                  href={`/station/${station.id}`} 
-                  key={station.id} 
+                <Link
+                  href={`/station/${station.id}`}
+                  key={station.id}
                   className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
                 >
                   <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">

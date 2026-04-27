@@ -1,4 +1,3 @@
-
 "use client"
 
 import { ArrowLeft, Camera, X, Check, Info } from 'lucide-react';
@@ -10,14 +9,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { createStation } from '@/lib/supabase-queries';
 
 export default function AddStationPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
+
   // Flow State
   const [step, setStep] = useState<1 | 2>(1);
-  
+
   // Step 1 State
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stationName, setStationName] = useState('');
@@ -29,6 +29,7 @@ export default function AddStationPage() {
   const [petrolPrice, setPetrolPrice] = useState('680');
   const [dieselPrice, setDieselPrice] = useState('750');
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogoClick = () => {
     fileInputRef.current?.click();
@@ -65,7 +66,7 @@ export default function AddStationPage() {
     setStep(2);
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!isAuthorized) {
       toast({
         variant: "destructive",
@@ -74,12 +75,31 @@ export default function AddStationPage() {
       });
       return;
     }
-    
-    toast({
-      title: "Station Registered",
-      description: "Your station has been submitted successfully.",
-    });
-    router.push('/profile');
+
+    setIsSubmitting(true);
+    try {
+      await createStation({
+        name: stationName,
+        address: stationAddress,
+        petrolPrice: Number(petrolPrice),
+        dieselPrice: Number(dieselPrice),
+        phone: phone || undefined,
+        logoUrl: logoPreview || undefined,
+      });
+      toast({
+        title: "Station Registered",
+        description: "Your station has been submitted successfully.",
+      });
+      router.push('/profile');
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Could not register station",
+        description: err?.message ?? "Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,8 +108,8 @@ export default function AddStationPage() {
         {step === 1 ? (
           <div className="px-6 space-y-8 max-w-lg mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-300">
             <header className="flex items-center -ml-2 py-4">
-              <button 
-                onClick={() => router.back()} 
+              <button
+                onClick={() => router.back()}
                 className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
               >
                 <ArrowLeft className="size-7 text-slate-800" />
@@ -104,24 +124,24 @@ export default function AddStationPage() {
             <form onSubmit={handleNextStep} className="space-y-8 pb-10">
               {/* Upload Logo Section */}
               <div className="flex flex-col items-center justify-center py-2 space-y-2">
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
                   onChange={handleFileChange}
                 />
-                <div 
+                <div
                   onClick={handleLogoClick}
                   className="relative group cursor-pointer"
                 >
                   <div className="size-32 rounded-full border-2 border-dashed border-slate-300 flex flex-col items-center justify-center space-y-1 bg-slate-50/50 hover:bg-slate-100 transition-all overflow-hidden relative">
                     {logoPreview ? (
                       <>
-                        <Image 
-                          src={logoPreview} 
-                          alt="Logo preview" 
-                          fill 
+                        <Image
+                          src={logoPreview}
+                          alt="Logo preview"
+                          fill
                           className="object-cover"
                         />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -136,7 +156,7 @@ export default function AddStationPage() {
                     )}
                   </div>
                   {logoPreview && (
-                    <button 
+                    <button
                       type="button"
                       onClick={removeLogo}
                       className="absolute -top-1 -right-1 bg-slate-800 text-white rounded-full p-1 shadow-md hover:bg-slate-900 transition-colors"
@@ -150,11 +170,11 @@ export default function AddStationPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="station-name" className="text-slate-700 font-semibold">Station Name</Label>
-                <Input 
-                  id="station-name" 
+                <Input
+                  id="station-name"
                   value={stationName}
                   onChange={(e) => setStationName(e.target.value)}
-                  placeholder="e.g. Total Energies – Lekki Phase 1" 
+                  placeholder="e.g. Total Energies – Lekki Phase 1"
                   className="h-14 bg-white border-slate-200 rounded-lg text-lg"
                   required
                 />
@@ -162,11 +182,11 @@ export default function AddStationPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="address" className="text-slate-700 font-semibold">Station Address</Label>
-                <Input 
-                  id="address" 
+                <Input
+                  id="address"
                   value={stationAddress}
                   onChange={(e) => setStationAddress(e.target.value)}
-                  placeholder="Enter full address" 
+                  placeholder="Enter full address"
                   className="h-14 bg-white border-slate-200 rounded-lg text-lg"
                   required
                 />
@@ -178,18 +198,18 @@ export default function AddStationPage() {
                   <div className="flex items-center justify-center px-4 border border-r-0 border-slate-200 rounded-l-lg bg-slate-50 text-slate-800 font-bold text-lg leading-none">
                     +234
                   </div>
-                  <Input 
-                    id="phone" 
+                  <Input
+                    id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="optional" 
+                    placeholder="optional"
                     className="h-full bg-white border-slate-200 rounded-l-none rounded-r-lg text-lg"
                   />
                 </div>
               </div>
 
               <div className="pt-4">
-                <Button 
+                <Button
                   type="submit"
                   className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
                 >
@@ -201,8 +221,8 @@ export default function AddStationPage() {
         ) : (
           <div className="px-6 space-y-6 max-w-lg mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-300">
             <header className="flex items-center -ml-2 py-4">
-              <button 
-                onClick={() => setStep(1)} 
+              <button
+                onClick={() => setStep(1)}
                 className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
               >
                 <ArrowLeft className="size-7 text-slate-800" />
@@ -241,7 +261,7 @@ export default function AddStationPage() {
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">
                     ₦
                   </div>
-                  <Input 
+                  <Input
                     type="number"
                     value={petrolPrice}
                     onChange={(e) => setPetrolPrice(e.target.value)}
@@ -262,7 +282,7 @@ export default function AddStationPage() {
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">
                     ₦
                   </div>
-                  <Input 
+                  <Input
                     type="number"
                     value={dieselPrice}
                     onChange={(e) => setDieselPrice(e.target.value)}
@@ -275,8 +295,8 @@ export default function AddStationPage() {
               </div>
 
               <div className="flex items-center space-x-3 pt-2">
-                <Checkbox 
-                  id="authorized" 
+                <Checkbox
+                  id="authorized"
                   checked={isAuthorized}
                   onCheckedChange={(checked) => setIsAuthorized(checked as boolean)}
                   className="size-6 border-slate-300 data-[state=checked]:bg-[#D9451B] data-[state=checked]:border-[#D9451B]"
@@ -300,11 +320,12 @@ export default function AddStationPage() {
               </div>
 
               <div className="pt-4 pb-12">
-                <Button 
+                <Button
                   onClick={handleFinish}
+                  disabled={isSubmitting}
                   className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
                 >
-                  Finish
+                  {isSubmitting ? 'Submitting...' : 'Finish'}
                 </Button>
               </div>
             </div>

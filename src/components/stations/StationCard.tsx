@@ -1,9 +1,9 @@
 "use client"
 
-import { FuelStation } from '@/lib/mock-data';
+import { FuelStation } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Fuel, Navigation, Star, Clock } from 'lucide-react';
+import { Navigation, Star } from 'lucide-react';
 import Image from 'next/image';
 
 interface StationCardProps {
@@ -45,7 +45,7 @@ export function StationCard({ station, priority }: StationCardProps) {
             {station.rating}
           </div>
         </div>
-        
+
         <p className="text-muted-foreground text-xs mb-4 flex items-center gap-1">
           <Navigation className="size-3" />
           {station.address} • {station.distance}

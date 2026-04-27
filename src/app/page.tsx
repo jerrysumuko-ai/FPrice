@@ -1,8 +1,8 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
-import { MOCK_STATIONS, FuelStation } from '@/lib/mock-data';
+import { FuelStation } from '@/lib/types';
+import { fetchStations } from '@/lib/supabase-queries';
 import { Search, Fuel } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -24,9 +24,9 @@ const ShafaIcon = ({ className }: { className?: string }) => (
       <text x="80" y="70" style={{ font: '900 16px sans-serif' }} fill="#F37021">ENERGY</text>
       <g transform="translate(165, 35) scale(0.5)">
          {[...Array(12)].map((_, i) => (
-           <ellipse 
+           <ellipse
              key={i}
-             cx="0" cy="0" rx="35" ry="12" 
+             cx="0" cy="0" rx="35" ry="12"
              fill={i % 2 === 0 ? "#E31E24" : "#F37021"}
              transform={`rotate(${i * 30})`}
              opacity="0.9"
@@ -70,17 +70,34 @@ const NNPCIcon = ({ className }: { className?: string }) => (
 
 export default function Home() {
   const [search, setSearch] = useState('');
+  const [stations, setStations] = useState<FuelStation[]>([]);
   const [recentStations, setRecentStations] = useState<FuelStation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedRecentIds = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
-    const items = storedRecentIds
-      .map((id: string) => MOCK_STATIONS.find(s => s.id === id))
-      .filter(Boolean) as FuelStation[];
-    setRecentStations(items);
+    let cancelled = false;
+    (async () => {
+      const all = await fetchStations();
+      if (cancelled) return;
+      setStations(all);
+      setLoading(false);
+
+      const storedRecentIds: string[] = JSON.parse(
+        localStorage.getItem('fuel_finder_recent') || '[]'
+      );
+      if (storedRecentIds.length > 0) {
+        const items = storedRecentIds
+          .map((id) => all.find((s) => s.id === id))
+          .filter(Boolean) as FuelStation[];
+        if (!cancelled) setRecentStations(items);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const filteredStations = MOCK_STATIONS
+  const filteredStations = stations
     .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -107,8 +124,8 @@ export default function Home() {
       <div className="p-4 pt-6 sticky top-0 bg-white z-10">
         <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl px-4 h-14">
           <Search className="text-slate-600 size-6 mr-3" />
-          <input 
-            placeholder="Search" 
+          <input
+            placeholder="Search"
             className="bg-transparent border-none outline-none flex-1 text-xl text-slate-900 placeholder:text-slate-500 font-normal"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -128,9 +145,9 @@ export default function Home() {
                 const isUddyKing = isUddyKingStation(station.name);
                 const isNNPC = isNNPCStation(station.name);
                 return (
-                  <Link 
-                    href={`/station/${station.id}`} 
-                    key={station.id} 
+                  <Link
+                    href={`/station/${station.id}`}
+                    key={station.id}
                     className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
                   >
                     <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
@@ -163,43 +180,51 @@ export default function Home() {
         <div className="mt-6 pb-24">
           <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">A—Z</h2>
           <div className="space-y-1">
-            {filteredStations.map((station) => {
-              const isMobil = isMobilStation(station.name);
-              const isShafa = isShafaStation(station.name);
-              const isUddyKing = isUddyKingStation(station.name);
-              const isNNPC = isNNPCStation(station.name);
-              return (
-                <Link 
-                  href={`/station/${station.id}`} 
-                  key={station.id} 
-                  className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
-                >
-                  <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
-                    {isMobil ? (
-                      <MobilIcon className="w-8 h-auto" />
-                    ) : isShafa ? (
-                      <ShafaIcon className="w-10 h-auto" />
-                    ) : isUddyKing ? (
-                      <UddyKingIcon className="w-8 h-auto" />
-                    ) : isNNPC ? (
-                      <NNPCIcon className="w-10 h-auto" />
-                    ) : (
-                      <Fuel className="size-5 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[17px] font-medium text-slate-800 truncate">{station.name}</div>
-                    <div className="text-sm text-slate-400 font-normal truncate">
-                      {station.address}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-            {filteredStations.length === 0 && (
+            {loading ? (
               <div className="py-12 text-center text-slate-400 italic">
-                No matching stations found
+                Loading stations...
               </div>
+            ) : (
+              <>
+                {filteredStations.map((station) => {
+                  const isMobil = isMobilStation(station.name);
+                  const isShafa = isShafaStation(station.name);
+                  const isUddyKing = isUddyKingStation(station.name);
+                  const isNNPC = isNNPCStation(station.name);
+                  return (
+                    <Link
+                      href={`/station/${station.id}`}
+                      key={station.id}
+                      className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
+                    >
+                      <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
+                        {isMobil ? (
+                          <MobilIcon className="w-8 h-auto" />
+                        ) : isShafa ? (
+                          <ShafaIcon className="w-10 h-auto" />
+                        ) : isUddyKing ? (
+                          <UddyKingIcon className="w-8 h-auto" />
+                        ) : isNNPC ? (
+                          <NNPCIcon className="w-10 h-auto" />
+                        ) : (
+                          <Fuel className="size-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[17px] font-medium text-slate-800 truncate">{station.name}</div>
+                        <div className="text-sm text-slate-400 font-normal truncate">
+                          {station.address}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {filteredStations.length === 0 && (
+                  <div className="py-12 text-center text-slate-400 italic">
+                    No matching stations found
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
