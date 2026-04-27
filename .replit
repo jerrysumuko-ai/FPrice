@@ -34,3 +34,8 @@ externalPort = 80
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+NEXT_PUBLIC_SUPABASE_URL = "https://xecahaklijqeiqtgmytm.supabase.co"
