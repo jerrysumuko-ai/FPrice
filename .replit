@@ -39,3 +39,4 @@ expertMode = true
 
 [userenv.shared]
 NEXT_PUBLIC_SUPABASE_URL = "https://xecahaklijqeiqtgmytm.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlY2FoYWtsaWpxZWlxdGdteXRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyOTE2NzcsImV4cCI6MjA5Mjg2NzY3N30.V-EQ3tjY2YNvyiCwlmT7Y6C3TQp3ZqrCUvz7_Zf2xsA"
