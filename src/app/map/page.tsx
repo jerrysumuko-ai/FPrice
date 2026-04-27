@@ -1,11 +1,24 @@
 "use client"
 
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { MOCK_STATIONS } from '@/lib/mock-data';
+import { FuelStation } from '@/lib/types';
+import { fetchStations } from '@/lib/supabase-queries';
 import { MapPin, Info, Navigation2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function MapPage() {
+  const [stations, setStations] = useState<FuelStation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const list = await fetchStations();
+      setStations(list);
+      setLoading(false);
+    })();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -24,9 +37,9 @@ export default function MapPage() {
         </div>
 
         {/* Mock Map Markers */}
-        {MOCK_STATIONS.map((station, idx) => (
-          <div 
-            key={station.id} 
+        {stations.map((station, idx) => (
+          <div
+            key={station.id}
             className="absolute transition-transform hover:scale-110 cursor-pointer group"
             style={{
               top: `${20 + idx * 15}%`,
@@ -47,7 +60,7 @@ export default function MapPage() {
             <p className="text-xs text-muted-foreground">Google Maps API integration would be rendered here in a production environment.</p>
           </div>
           <Badge variant="outline" className="border-secondary text-secondary">
-            5 Stations Nearby
+            {stations.length} Station{stations.length === 1 ? '' : 's'} Nearby
           </Badge>
         </div>
 
@@ -62,18 +75,22 @@ export default function MapPage() {
       <div className="grid gap-3">
         <h2 className="text-xl font-bold">Nearest Stations</h2>
         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {MOCK_STATIONS.map((station) => (
-            <Card key={station.id} className="min-w-[280px] p-4 flex gap-4 items-center bg-card/50 backdrop-blur-sm border-none shadow-sm">
-              <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <MapPin className="text-primary size-6" />
-              </div>
-              <div className="space-y-1">
-                <div className="font-bold text-sm truncate w-40">{station.name}</div>
-                <div className="text-xs text-muted-foreground">{station.distance} away</div>
-                <div className="text-xs font-black text-primary">₦{station.petrolPrice}/Litre</div>
-              </div>
-            </Card>
-          ))}
+          {loading ? (
+            <div className="text-slate-400 italic px-2">Loading stations...</div>
+          ) : (
+            stations.map((station) => (
+              <Card key={station.id} className="min-w-[280px] p-4 flex gap-4 items-center bg-card/50 backdrop-blur-sm border-none shadow-sm">
+                <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <MapPin className="text-primary size-6" />
+                </div>
+                <div className="space-y-1">
+                  <div className="font-bold text-sm truncate w-40">{station.name}</div>
+                  <div className="text-xs text-muted-foreground">{station.distance} away</div>
+                  <div className="text-xs font-black text-primary">₦{station.petrolPrice}/Litre</div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </div>

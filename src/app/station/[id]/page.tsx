@@ -1,8 +1,8 @@
-
 "use client"
 
 import { useParams, useRouter } from 'next/navigation';
-import { MOCK_STATIONS } from '@/lib/mock-data';
+import { FuelStation } from '@/lib/types';
+import { fetchStationById, submitFeedback, submitPriceReport } from '@/lib/supabase-queries';
 import { ArrowLeft, Fuel, AlertTriangle, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -38,9 +38,9 @@ const ShafaIcon = ({ className }: { className?: string }) => (
       <text x="80" y="70" style={{ font: '900 16px sans-serif' }} fill="#F37021">ENERGY</text>
       <g transform="translate(165, 35) scale(0.5)">
          {[...Array(12)].map((_, i) => (
-           <ellipse 
+           <ellipse
              key={i}
-             cx="0" cy="0" rx="35" ry="12" 
+             cx="0" cy="0" rx="35" ry="12"
              fill={i % 2 === 0 ? "#E31E24" : "#F37021"}
              transform={`rotate(${i * 30})`}
              opacity="0.9"
@@ -86,27 +86,46 @@ export default function StationDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const station = MOCK_STATIONS.find(s => s.id === id);
+  const stationId = Array.isArray(id) ? id[0] : id;
 
+  const [station, setStation] = useState<FuelStation | null>(null);
+  const [loading, setLoading] = useState(true);
   const [calcAmount, setCalcAmount] = useState('1000');
   const [feedback, setFeedback] = useState('');
   const [selectedFuel, setSelectedFuel] = useState<'petrol' | 'diesel'>('petrol');
-  
+
   const [newPetrolPrice, setNewPetrolPrice] = useState('');
   const [newDieselPrice, setNewDieselPrice] = useState('');
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isFavourite, setIsFavourite] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (!stationId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const s = await fetchStationById(stationId);
+      if (cancelled) return;
+      setStation(s);
+      setLoading(false);
+
       const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
-      const newRecent = [id, ...recent.filter((i: string) => i !== id)].slice(0, 3);
+      const newRecent = [stationId, ...recent.filter((i: string) => i !== stationId)].slice(0, 3);
       localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
 
       const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
-      setIsFavourite(favs.includes(id));
-    }
-  }, [id]);
+      setIsFavourite(favs.includes(stationId));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [stationId]);
+
+  if (loading) {
+    return <div className="p-8 text-center text-slate-400">Loading station...</div>;
+  }
 
   if (!station) {
     return <div className="p-8 text-center">Station not found.</div>;
@@ -115,37 +134,69 @@ export default function StationDetailPage() {
   const currentPrice = selectedFuel === 'petrol' ? station.petrolPrice : station.dieselPrice;
   const liters = (parseFloat(calcAmount) || 0) / currentPrice;
 
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     if (!feedback.trim()) return;
-    toast({
-      title: "Feedback Submitted",
-      description: "Thank you for sharing your experience!",
-    });
-    setFeedback('');
+    setIsSubmittingFeedback(true);
+    try {
+      await submitFeedback({
+        stationId: station.id,
+        subject: `Feedback for ${station.name}`,
+        message: feedback,
+      });
+      toast({
+        title: "Feedback Submitted",
+        description: "Thank you for sharing your experience!",
+      });
+      setFeedback('');
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to submit",
+        description: err?.message ?? "Please try again later.",
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   const toggleFavourite = () => {
     const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
     let newFavs;
-    if (favs.includes(id)) {
-      newFavs = favs.filter((i: string) => i !== id);
+    if (favs.includes(station.id)) {
+      newFavs = favs.filter((i: string) => i !== station.id);
       setIsFavourite(false);
     } else {
-      newFavs = [...favs, id];
+      newFavs = [...favs, station.id];
       setIsFavourite(true);
     }
     localStorage.setItem('fuel_finder_favs', JSON.stringify(newFavs));
   };
 
-  const handleReportPrice = () => {
+  const handleReportPrice = async () => {
     if (!newPetrolPrice && !newDieselPrice) return;
-    toast({
-      title: "Price Reported",
-      description: "Our team will verify the updated rates shortly. Thank you!",
-    });
-    setIsReportDialogOpen(false);
-    setNewPetrolPrice('');
-    setNewDieselPrice('');
+    setIsSubmittingReport(true);
+    try {
+      await submitPriceReport({
+        stationId: station.id,
+        petrolPrice: newPetrolPrice ? Number(newPetrolPrice) : null,
+        dieselPrice: newDieselPrice ? Number(newDieselPrice) : null,
+      });
+      toast({
+        title: "Price Reported",
+        description: "Our team will verify the updated rates shortly. Thank you!",
+      });
+      setIsReportDialogOpen(false);
+      setNewPetrolPrice('');
+      setNewDieselPrice('');
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to report",
+        description: err?.message ?? "Please try again later.",
+      });
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
   const isMobil = station.name.toLowerCase().includes('mobil') || station.name.toLowerCase().includes('mobile');
@@ -177,8 +228,8 @@ export default function StationDetailPage() {
             <h1 className="text-xl font-bold text-slate-900 truncate">{station.name}</h1>
           </div>
         </div>
-        <button 
-          onClick={toggleFavourite} 
+        <button
+          onClick={toggleFavourite}
           className="p-2 active:scale-90 transition-transform"
         >
           <Star className={cn("size-7 transition-colors", isFavourite ? "fill-yellow-400 text-yellow-400" : "text-slate-300")} />
@@ -190,7 +241,7 @@ export default function StationDetailPage() {
       </div>
 
       <div className="p-4 grid grid-cols-2 gap-4">
-        <button 
+        <button
           onClick={() => setSelectedFuel('petrol')}
           className={cn(
             "bg-[#109D3E] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
@@ -207,7 +258,7 @@ export default function StationDetailPage() {
              </div>
           )}
         </button>
-        <button 
+        <button
           onClick={() => setSelectedFuel('diesel')}
           className={cn(
             "bg-[#3B4453] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
@@ -231,7 +282,7 @@ export default function StationDetailPage() {
       <div className="p-4 space-y-4">
         <h2 className="text-lg font-bold text-slate-800">Fuel Calculator</h2>
         <div className="space-y-3">
-          <Input 
+          <Input
             value={calcAmount}
             onChange={(e) => setCalcAmount(e.target.value)}
             placeholder="Enter amount you want to spend (₦)"
@@ -239,7 +290,7 @@ export default function StationDetailPage() {
             type="number"
           />
           <div className="bg-[#F1F3F4] p-4 rounded-lg text-[17px] font-medium text-slate-900">
-            ₦{Number(calcAmount).toLocaleString() || '0'} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
+            ₦{Number(calcAmount || 0).toLocaleString('en-US')} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
           </div>
         </div>
       </div>
@@ -248,18 +299,19 @@ export default function StationDetailPage() {
 
       <div className="p-4 space-y-4">
         <div className="relative border border-slate-200 rounded-xl p-3 focus-within:ring-2 ring-primary/20">
-          <Textarea 
+          <Textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             placeholder="Leave your feedback or experience..."
             className="border-none focus-visible:ring-0 min-h-[120px] p-0 resize-none text-[15px] placeholder:text-slate-400"
           />
         </div>
-        <Button 
+        <Button
           onClick={handleFeedbackSubmit}
+          disabled={isSubmittingFeedback}
           className="w-full h-12 bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-lg rounded-xl"
         >
-          Submit
+          {isSubmittingFeedback ? 'Submitting...' : 'Submit'}
         </Button>
         <div className="text-center">
           <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
@@ -281,9 +333,9 @@ export default function StationDetailPage() {
               <div className="space-y-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="petrol-report">Petrol Price (₦/Litre)</Label>
-                  <Input 
-                    id="petrol-report" 
-                    type="number" 
+                  <Input
+                    id="petrol-report"
+                    type="number"
                     placeholder={station.petrolPrice.toString()}
                     value={newPetrolPrice}
                     onChange={(e) => setNewPetrolPrice(e.target.value)}
@@ -291,9 +343,9 @@ export default function StationDetailPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="diesel-report">Diesel Price (₦/Litre)</Label>
-                  <Input 
-                    id="diesel-report" 
-                    type="number" 
+                  <Input
+                    id="diesel-report"
+                    type="number"
                     placeholder={station.dieselPrice.toString()}
                     value={newDieselPrice}
                     onChange={(e) => setNewDieselPrice(e.target.value)}
@@ -301,11 +353,12 @@ export default function StationDetailPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button 
+                <Button
                   onClick={handleReportPrice}
+                  disabled={isSubmittingReport}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-bold h-12 rounded-xl"
                 >
-                  Submit Report
+                  {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
                 </Button>
               </DialogFooter>
             </DialogContent>
