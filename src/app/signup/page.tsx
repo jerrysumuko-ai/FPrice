@@ -58,9 +58,21 @@ export default function SignUpPage() {
     if (code.length < 6) return;
     setIsVerifying(true);
     try {
-      const { error } = method === 'email'
-        ? await supabase.auth.verifyOtp({ email, token: code, type: 'email' })
-        : await supabase.auth.verifyOtp({ phone: fullPhone, token: code, type: 'sms' });
+      let error: { message: string } | null = null;
+
+      if (method === 'email') {
+        // New users get the "Confirm signup" template (type: 'signup'),
+        // existing users get the "Magic Link" template (type: 'email').
+        // Try signup first (most common for first-time use), then fall back.
+        const first = await supabase.auth.verifyOtp({ email, token: code, type: 'signup' });
+        if (first.error) {
+          const second = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+          error = second.error;
+        }
+      } else {
+        const res = await supabase.auth.verifyOtp({ phone: fullPhone, token: code, type: 'sms' });
+        error = res.error;
+      }
 
       if (error) throw error;
 
