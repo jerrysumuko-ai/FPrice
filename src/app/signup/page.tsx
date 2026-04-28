@@ -83,8 +83,9 @@ export default function SignUpPage() {
       if (!success) throw lastError ?? new Error('Verification failed');
 
       toast({ title: 'Welcome!', description: 'You are signed in.' });
-      router.push('/profile');
-      router.refresh();
+      // Hard navigate so the freshly-written auth cookies are sent on the
+      // next request — router.push can race with cookie persistence.
+      window.location.assign('/profile');
     } catch (err: any) {
       console.error('[verifyOtp] final error', err);
       toast({
