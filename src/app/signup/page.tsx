@@ -55,7 +55,7 @@ export default function SignUpPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.length < 6) return;
+    if (!code.trim()) return;
     setIsVerifying(true);
     try {
       let lastError: { message: string; status?: number } | null = null;
@@ -192,18 +192,16 @@ export default function SignUpPage() {
         ) : (
           <form onSubmit={handleVerify} className="space-y-6 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="code" className="text-[14px] font-semibold text-slate-700 ml-1">6-digit Code</Label>
+              <Label htmlFor="code" className="text-[14px] font-semibold text-slate-700 ml-1">Verification Code</Label>
               <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
                 <input
                   id="code"
-                  inputMode="numeric"
+                  inputMode="text"
                   autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  placeholder="123456"
-                  className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium tracking-[0.4em] leading-none h-full"
+                  placeholder="Paste the code from your email"
+                  className="bg-transparent border-none outline-none flex-1 text-base text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
                   value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setCode(e.target.value.trim())}
                   required
                 />
               </div>
@@ -214,7 +212,7 @@ export default function SignUpPage() {
 
             <Button
               type="submit"
-              disabled={isVerifying || code.length < 6}
+              disabled={isVerifying || !code.trim()}
               className="w-full h-14 bg-[#C2410C] hover:bg-[#A6330A] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {isVerifying ? 'Verifying...' : 'Verify & Continue'}
