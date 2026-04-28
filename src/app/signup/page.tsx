@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, ArrowLeft } from 'lucide-react';
@@ -19,9 +19,33 @@ export default function SignUpPage() {
   const [code, setCode] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
+
+  useEffect(() => {
+    let mounted = true;
+
+    const redirectIfSignedIn = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (mounted && data.session) {
+        router.replace('/profile');
+      }
+    };
+
+    redirectIfSignedIn();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted && session) {
+        router.replace('/profile');
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router, supabase]);
 
   const fullPhone = phoneNumber ? `+234${phoneNumber.replace(/^0+/, '').replace(/\D/g, '')}` : '';
 
@@ -91,6 +115,11 @@ export default function SignUpPage() {
       if (!success) throw lastError ?? new Error('Verification failed');
 
       toast({ title: 'Welcome!', description: 'You are signed in.' });
+      for (let i = 0; i < 10; i += 1) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) break;
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
       // Hard navigate so the freshly-written auth cookies are sent on the
       // next request — router.push can race with cookie persistence.
       window.location.assign('/profile');
