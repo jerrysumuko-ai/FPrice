@@ -7,36 +7,60 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Session } from '@supabase/supabase-js';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data } = await supabase.auth.getUser();
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const applySession = (session: Session | null) => {
       if (cancelled) return;
-      if (!data.user) {
-        router.replace('/signup');
-        return;
+      if (session?.user) {
+        if (redirectTimer) {
+          clearTimeout(redirectTimer);
+          redirectTimer = null;
+        }
+        setEmail(session.user.email ?? null);
+        setPhone(session.user.phone ? `+${session.user.phone}` : null);
+        setLoading(false);
       }
-      setEmail(data.user.email ?? null);
-      setPhone(data.user.phone ? `+${data.user.phone}` : null);
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
+    };
+
+    // 1) Immediate read from local storage
+    supabase.auth.getSession().then(({ data }) => applySession(data.session));
+
+    // 2) React to any auth state change (e.g. session arriving moments after mount)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session);
+    });
+
+    // 3) If still no session after a grace period, send them to signup
+    redirectTimer = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!cancelled && !data.session) {
+        router.replace('/signup');
+      }
+    }, 1500);
+
+    return () => {
+      cancelled = true;
+      if (redirectTimer) clearTimeout(redirectTimer);
+      subscription.unsubscribe();
+    };
   }, [router, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({ title: 'Signed out' });
-    router.replace('/signup');
-    router.refresh();
+    window.location.assign('/signup');
   };
 
   if (loading) {
