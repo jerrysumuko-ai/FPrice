@@ -58,28 +58,35 @@ export default function SignUpPage() {
     if (code.length < 6) return;
     setIsVerifying(true);
     try {
-      let error: { message: string } | null = null;
+      let lastError: { message: string; status?: number } | null = null;
+      let success = false;
 
       if (method === 'email') {
-        // New users get the "Confirm signup" template (type: 'signup'),
-        // existing users get the "Magic Link" template (type: 'email').
-        // Try signup first (most common for first-time use), then fall back.
-        const first = await supabase.auth.verifyOtp({ email, token: code, type: 'signup' });
-        if (first.error) {
-          const second = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
-          error = second.error;
+        // Try every email-OTP type Supabase might have used.
+        // First success wins; we never override a success with a later error.
+        for (const type of ['email', 'signup', 'magiclink'] as const) {
+          const res = await supabase.auth.verifyOtp({ email, token: code, type });
+          console.log(`[verifyOtp] type=${type}`, { error: res.error, hasSession: !!res.data?.session });
+          if (!res.error && res.data?.session) {
+            success = true;
+            break;
+          }
+          lastError = res.error;
         }
       } else {
         const res = await supabase.auth.verifyOtp({ phone: fullPhone, token: code, type: 'sms' });
-        error = res.error;
+        console.log('[verifyOtp] type=sms', { error: res.error, hasSession: !!res.data?.session });
+        if (!res.error && res.data?.session) success = true;
+        else lastError = res.error;
       }
 
-      if (error) throw error;
+      if (!success) throw lastError ?? new Error('Verification failed');
 
       toast({ title: 'Welcome!', description: 'You are signed in.' });
       router.push('/profile');
       router.refresh();
     } catch (err: any) {
+      console.error('[verifyOtp] final error', err);
       toast({
         variant: 'destructive',
         title: 'Invalid code',
