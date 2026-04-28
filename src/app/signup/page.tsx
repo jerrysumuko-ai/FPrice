@@ -66,8 +66,12 @@ export default function SignUpPage() {
         // First success wins; we never override a success with a later error.
         for (const type of ['email', 'signup', 'magiclink'] as const) {
           const res = await supabase.auth.verifyOtp({ email, token: code, type });
-          console.log(`[verifyOtp] type=${type}`, { error: res.error, hasSession: !!res.data?.session });
-          if (!res.error && res.data?.session) {
+          console.log(`[verifyOtp] type=${type}`, {
+            error: res.error,
+            hasSession: !!res.data?.session,
+            hasUser: !!res.data?.user,
+          });
+          if (!res.error) {
             success = true;
             break;
           }
@@ -75,8 +79,12 @@ export default function SignUpPage() {
         }
       } else {
         const res = await supabase.auth.verifyOtp({ phone: fullPhone, token: code, type: 'sms' });
-        console.log('[verifyOtp] type=sms', { error: res.error, hasSession: !!res.data?.session });
-        if (!res.error && res.data?.session) success = true;
+        console.log('[verifyOtp] type=sms', {
+          error: res.error,
+          hasSession: !!res.data?.session,
+          hasUser: !!res.data?.user,
+        });
+        if (!res.error) success = true;
         else lastError = res.error;
       }
 
