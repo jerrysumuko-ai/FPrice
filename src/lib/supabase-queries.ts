@@ -16,12 +16,11 @@ export async function fetchStations(): Promise<FuelStation[]> {
     .from('stations')
     .select('*')
     .order('name', { ascending: true });
-
   if (error) {
     console.error('fetchStations error:', error);
     return [];
   }
-  return (data as StationRow[]).map(rowToStation);
+  return ((data as StationRow[]) ?? []).map(rowToStation);
 }
 
 export async function fetchStationById(id: string): Promise<FuelStation | null> {
@@ -31,7 +30,6 @@ export async function fetchStationById(id: string): Promise<FuelStation | null> 
     .select('*')
     .eq('id', id)
     .maybeSingle();
-
   if (error) {
     console.error('fetchStationById error:', error);
     return null;
@@ -47,12 +45,11 @@ export async function fetchStationsByIds(ids: string[]): Promise<FuelStation[]> 
     .from('stations')
     .select('*')
     .in('id', ids);
-
   if (error) {
     console.error('fetchStationsByIds error:', error);
     return [];
   }
-  return (data as StationRow[]).map(rowToStation);
+  return ((data as StationRow[]) ?? []).map(rowToStation);
 }
 
 export async function fetchNewsAlerts(): Promise<NewsAlert[]> {
@@ -61,12 +58,11 @@ export async function fetchNewsAlerts(): Promise<NewsAlert[]> {
     .from('news_alerts')
     .select('*')
     .order('created_at', { ascending: false });
-
   if (error) {
     console.error('fetchNewsAlerts error:', error);
     return [];
   }
-  return (data as NewsRow[]).map(rowToNews);
+  return ((data as NewsRow[]) ?? []).map(rowToNews);
 }
 
 export async function submitFeedback(args: {
@@ -98,11 +94,13 @@ export async function submitPriceReport(args: {
 }
 
 function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || `station-${Date.now()}`;
+  return (
+    input
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || `station-${Date.now()}`
+  );
 }
 
 export async function createStation(args: {
@@ -115,7 +113,6 @@ export async function createStation(args: {
 }): Promise<FuelStation> {
   const supabase = createClient();
   const id = `${slugify(args.name)}-${Date.now().toString(36)}`;
-
   const now = new Date();
   const lastUpdated = now.toLocaleTimeString([], {
     hour: '2-digit',
@@ -140,7 +137,7 @@ export async function createStation(args: {
       phone: args.phone ?? null,
       logo_url: args.logoUrl ?? null,
     })
-    .select('*')
+    .select()
     .single();
 
   if (error) throw error;
