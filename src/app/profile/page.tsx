@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Pencil, PlusCircle, ChevronRight, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
-import { Link } from 'next/link';
+import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 
 export default function ProfilePage() {

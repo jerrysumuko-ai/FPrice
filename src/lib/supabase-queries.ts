@@ -1,5 +1,6 @@
 "use client";
 
+import { createClient } from '@/utils/supabase/client';
 import {
   FuelStation,
   NewsAlert,
@@ -9,66 +10,59 @@ import {
   rowToNews,
 } from './types';
 
-async function jsonFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!res.ok && res.status !== 404) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Request failed: ${res.status} ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
-
 export async function fetchStations(): Promise<FuelStation[]> {
-  try {
-    const data = await jsonFetch<StationRow[]>('/api/stations');
-    return (data ?? []).map(rowToStation);
-  } catch (err) {
-    console.error('fetchStations error:', err);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('stations')
+    .select('*')
+    .order('name', { ascending: true });
+  if (error) {
+    console.error('fetchStations error:', error);
     return [];
   }
+  return ((data as StationRow[]) ?? []).map(rowToStation);
 }
 
 export async function fetchStationById(id: string): Promise<FuelStation | null> {
-  try {
-    const data = await jsonFetch<StationRow | null>(
-      `/api/stations/${encodeURIComponent(id)}`,
-    );
-    if (!data) return null;
-    return rowToStation(data);
-  } catch (err) {
-    console.error('fetchStationById error:', err);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('stations')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) {
+    console.error('fetchStationById error:', error);
     return null;
   }
+  if (!data) return null;
+  return rowToStation(data as StationRow);
 }
 
 export async function fetchStationsByIds(ids: string[]): Promise<FuelStation[]> {
   if (ids.length === 0) return [];
-  try {
-    const data = await jsonFetch<StationRow[]>('/api/stations/by-ids', {
-      method: 'POST',
-      body: JSON.stringify({ ids }),
-    });
-    return (data ?? []).map(rowToStation);
-  } catch (err) {
-    console.error('fetchStationsByIds error:', err);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('stations')
+    .select('*')
+    .in('id', ids);
+  if (error) {
+    console.error('fetchStationsByIds error:', error);
     return [];
   }
+  return ((data as StationRow[]) ?? []).map(rowToStation);
 }
 
 export async function fetchNewsAlerts(): Promise<NewsAlert[]> {
-  try {
-    const data = await jsonFetch<NewsRow[]>('/api/news');
-    return (data ?? []).map(rowToNews);
-  } catch (err) {
-    console.error('fetchNewsAlerts error:', err);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('news_alerts')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('fetchNewsAlerts error:', error);
     return [];
   }
+  return ((data as NewsRow[]) ?? []).map(rowToNews);
 }
 
 export async function submitFeedback(args: {
@@ -76,14 +70,13 @@ export async function submitFeedback(args: {
   subject: string;
   message: string;
 }) {
-  await jsonFetch('/api/feedback', {
-    method: 'POST',
-    body: JSON.stringify({
-      stationId: args.stationId,
-      subject: args.subject,
-      message: args.message,
-    }),
+  const supabase = createClient();
+  const { error } = await supabase.from('feedback').insert({
+    station_id: args.stationId,
+    subject: args.subject,
+    message: args.message,
   });
+  if (error) throw error;
 }
 
 export async function submitPriceReport(args: {
@@ -91,14 +84,13 @@ export async function submitPriceReport(args: {
   petrolPrice: number | null;
   dieselPrice: number | null;
 }) {
-  await jsonFetch('/api/price-reports', {
-    method: 'POST',
-    body: JSON.stringify({
-      stationId: args.stationId,
-      petrolPrice: args.petrolPrice,
-      dieselPrice: args.dieselPrice,
-    }),
+  const supabase = createClient();
+  const { error } = await supabase.from('price_reports').insert({
+    station_id: args.stationId,
+    petrol_price: args.petrolPrice,
+    diesel_price: args.dieselPrice,
   });
+  if (error) throw error;
 }
 
 function slugify(input: string): string {
@@ -119,6 +111,7 @@ export async function createStation(args: {
   phone?: string;
   logoUrl?: string;
 }): Promise<FuelStation> {
+  const supabase = createClient();
   const id = `${slugify(args.name)}-${Date.now().toString(36)}`;
   const now = new Date();
   const lastUpdated = now.toLocaleTimeString([], {
@@ -126,25 +119,27 @@ export async function createStation(args: {
     minute: '2-digit',
   });
 
-  const row = await jsonFetch<StationRow>('/api/stations', {
-    method: 'POST',
-    body: JSON.stringify({
+  const { data, error } = await supabase
+    .from('stations')
+    .insert({
       id,
       name: args.name,
       address: args.address,
-      petrolPrice: args.petrolPrice,
-      dieselPrice: args.dieselPrice,
-      isOpen: true,
+      petrol_price: args.petrolPrice,
+      diesel_price: args.dieselPrice,
+      is_open: true,
       distance: '',
-      rating: '0',
-      lat: '0',
-      lng: '0',
+      rating: 0,
+      lat: 0,
+      lng: 0,
       image: `https://picsum.photos/seed/${id}/600/400`,
-      lastUpdated,
+      last_updated: lastUpdated,
       phone: args.phone ?? null,
-      logoUrl: args.logoUrl ?? null,
-    }),
-  });
+      logo_url: args.logoUrl ?? null,
+    })
+    .select()
+    .single();
 
-  return rowToStation(row);
+  if (error) throw error;
+  return rowToStation(data as StationRow);
 }
