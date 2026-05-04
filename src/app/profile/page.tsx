@@ -14,27 +14,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         router.replace('/signup');
         return;
       }
-
       setUserEmail(session.user.email ?? '');
       setLoading(false);
-    };
-
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.replace('/signup');
-      }
     });
-
-    return () => subscription.unsubscribe();
   }, [router]);
 
   const handleLogout = async () => {
