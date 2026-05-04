@@ -62,8 +62,6 @@ export default function SignUpPage() {
       let success = false;
 
       if (method === 'email') {
-        // Try every email-OTP type Supabase might have used.
-        // First success wins; we never override a success with a later error.
         for (const type of ['email', 'signup', 'magiclink'] as const) {
           const res = await supabase.auth.verifyOtp({ email, token: code, type });
           console.log(`[verifyOtp] type=${type}`, {
@@ -91,9 +89,7 @@ export default function SignUpPage() {
       if (!success) throw lastError ?? new Error('Verification failed');
 
       toast({ title: 'Welcome!', description: 'You are signed in.' });
-      // Hard navigate so the freshly-written auth cookies are sent on the
-      // next request — router.push can race with cookie persistence.
-      window.location.assign('/profile');
+      window.location.assign('/');
     } catch (err: any) {
       console.error('[verifyOtp] final error', err);
       toast({
