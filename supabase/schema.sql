@@ -111,9 +111,11 @@ create policy "price_reports_insert_public"
 --   values ('station-photos', 'station-photos', true)
 --   on conflict (id) do nothing;
 --
+--   drop policy if exists "station_photos_insert" on storage.objects;
 --   create policy "station_photos_insert" on storage.objects
 --     for insert with check (bucket_id = 'station-photos');
 --
+--   drop policy if exists "station_photos_select" on storage.objects;
 --   create policy "station_photos_select" on storage.objects
 --     for select using (bucket_id = 'station-photos');
 
