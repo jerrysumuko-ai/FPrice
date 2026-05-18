@@ -109,7 +109,7 @@ export default function AddStationPage() {
           <div className="px-6 space-y-8 max-w-lg mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-300">
             <header className="flex items-center -ml-2 py-4">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.back()}
                 className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
               >
                 <ArrowLeft className="size-7 text-slate-800" />
