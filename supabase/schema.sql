@@ -120,28 +120,7 @@ create policy "price_reports_insert_public"
 --     for select using (bucket_id = 'station-photos');
 
 -- ---- SEED DATA -------------------------------------------------------------
-
-insert into stations
-  (id, name, address, petrol_price, diesel_price, is_open, distance, rating, lat, lng, image, last_updated, status)
-values
-  ('mobil-marian',            'Mobile (Mobile) Marian',     'Marian Road, Calabar',                  650, 1100, true, '0.5km', 4.8, 4.965, 8.335, 'https://picsum.photos/seed/mobil-marian/600/400', now()::text, 'approved'),
-  ('uddy-king-parliamentary', 'Uddy King Parliamentary',    'Parliamentary Extension, Calabar',      640, 1080, true, '1.5km', 4.4, 4.982, 8.342, 'https://picsum.photos/seed/uddy-parl/600/400',    now()::text, 'approved'),
-  ('shafa',                   'Shafa Energy',               'Murtala Mohammed Highway, Calabar',     630, 1050, true, '2.1km', 4.2, 4.995, 8.338, 'https://picsum.photos/seed/shafa/600/400',        now()::text, 'approved'),
-  ('uddy-king-effio-ette',    'Uddy King Effio-Ette',       'Effio-Ette Junction, Calabar',          645, 1090, true, '1.8km', 4.5, 4.972, 8.348, 'https://picsum.photos/seed/uddy-effio/600/400',   now()::text, 'approved'),
-  ('nnpc-highway',            'NNPC Mega Station',          'Murtala Mohammed Highway, Calabar',     610, 1020, true, '3.0km', 4.1, 5.012, 8.331, 'https://picsum.photos/seed/nnpc-cal/600/400',     now()::text, 'approved')
-on conflict (id) do update set
-  name         = excluded.name,
-  address      = excluded.address,
-  petrol_price = excluded.petrol_price,
-  diesel_price = excluded.diesel_price,
-  is_open      = excluded.is_open,
-  distance     = excluded.distance,
-  rating       = excluded.rating,
-  lat          = excluded.lat,
-  lng          = excluded.lng,
-  image        = excluded.image,
-  last_updated = excluded.last_updated,
-  status       = excluded.status;
+-- No seed stations. All stations are added via the app's "Add Station" form.
 
 insert into news_alerts (id, title, content, date, type) values
   ('n1', 'Upcoming Price Adjustment',
