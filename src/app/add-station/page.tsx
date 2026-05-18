@@ -127,8 +127,9 @@ export default function AddStationPage() {
       });
 
       toast({
-        title: 'Station submitted!',
-        description: 'Your station is pending review. It will appear in the app once approved.',
+        title: '🎉 Station submitted!',
+        description: 'Your station is now in review. We\'ll publish it to the app once verified. Thank you!',
+        duration: 6000,
       });
       router.push('/');
     } catch (err: any) {
@@ -410,7 +411,7 @@ export default function AddStationPage() {
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" /> Submitting…</span>
-                  ) : 'Submit for Review'}
+                  ) : 'Finish'}
                 </Button>
               </div>
             </div>
