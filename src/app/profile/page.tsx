@@ -5,20 +5,30 @@ import { ArrowLeft, PlusCircle, ChevronRight, User, LogOut } from 'lucide-react'
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getUser, clearUser, LocalUser } from '@/lib/auth';
+import { createClient } from '@/utils/supabase/client';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<LocalUser | null>(null);
-  const [checked, setChecked] = useState(false);
+  const supabase = createClient();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUser(getUser());
-    setChecked(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = () => {
-    clearUser();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
@@ -30,10 +40,15 @@ export default function ProfilePage() {
     }
   };
 
-  if (!checked) return null;
+  if (loading) return null;
 
-  const displayName = user ? user.name : 'Guest';
-  const subtitle = user ? (user.phone ? `+234${user.phone}` : 'Calabar FuelFinder') : 'Calabar FuelFinder';
+  const displayName = user?.email
+    ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1)
+    : user?.phone
+    ? user.phone
+    : 'Guest';
+
+  const subtitle = user?.email ?? user?.phone ?? 'Calabar FuelFinder';
 
   return (
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
@@ -60,7 +75,7 @@ export default function ProfilePage() {
 
         <div className="text-center space-y-1 mb-8">
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">{displayName}</h2>
-          <p className="text-slate-400">{subtitle}</p>
+          <p className="text-slate-400 text-sm truncate max-w-xs">{subtitle}</p>
         </div>
 
         <Separator className="mb-10" />
@@ -94,7 +109,7 @@ export default function ProfilePage() {
           </button>
         ) : (
           <Link href="/signup" className="w-full mt-12">
-            <button className="w-full h-16 bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg rounded-2xl transition-all flex items-center justify-center gap-2">
+            <button className="w-full h-16 bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg rounded-2xl transition-all flex items-center justify-center">
               Sign Up / Log In
             </button>
           </Link>

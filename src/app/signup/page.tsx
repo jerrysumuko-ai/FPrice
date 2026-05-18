@@ -1,99 +1,241 @@
 "use client"
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, UserCircle2 } from 'lucide-react';
-import { saveUser } from '@/lib/auth';
-import { Suspense } from 'react';
+import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+type Method = 'phone' | 'email';
+type Step = 'enter' | 'verify';
 
 function SignUpForm() {
+  const [method, setMethod] = useState<Method>('email');
+  const [step, setStep] = useState<Step>('enter');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/profile';
+  const { toast } = useToast();
+  const supabase = createClient();
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fullPhone = phoneNumber
+    ? `+234${phoneNumber.replace(/^0+/, '').replace(/\D/g, '')}`
+    : '';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    setIsSubmitting(true);
-    saveUser({ name: name.trim(), phone: phone.trim() });
-    router.replace(redirect);
+    setIsSending(true);
+    try {
+      const { error } =
+        method === 'email'
+          ? await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+          : await supabase.auth.signInWithOtp({ phone: fullPhone, options: { shouldCreateUser: true } });
+
+      if (error) throw error;
+
+      setStep('verify');
+      toast({
+        title: 'Code sent',
+        description:
+          method === 'email'
+            ? `Check ${email} for your 6-digit code.`
+            : `We sent a 6-digit code to ${fullPhone}.`,
+      });
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not send code',
+        description: err?.message ?? 'Please try again.',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setIsVerifying(true);
+    try {
+      let success = false;
+      let lastError: any = null;
+
+      if (method === 'email') {
+        for (const type of ['email', 'signup', 'magiclink'] as const) {
+          const res = await supabase.auth.verifyOtp({ email, token: code, type });
+          if (!res.error) { success = true; break; }
+          lastError = res.error;
+        }
+      } else {
+        const res = await supabase.auth.verifyOtp({ phone: fullPhone, token: code, type: 'sms' });
+        if (!res.error) success = true;
+        else lastError = res.error;
+      }
+
+      if (!success) throw lastError ?? new Error('Verification failed');
+
+      toast({ title: 'Welcome!', description: 'You are now signed in.' });
+      window.location.assign(redirect);
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid code',
+        description: err?.message ?? 'Check the code and try again.',
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center p-6 -mx-4 -mt-4 md:-mt-8">
       <div className="w-full max-w-[360px] bg-white rounded-[2rem] p-8 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500">
-
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1 text-slate-400 hover:text-slate-700 transition-colors text-sm font-medium -mb-2"
-        >
-          <ArrowLeft className="size-4" />
-          Back
-        </button>
-
-        <div className="flex flex-col items-center space-y-3">
-          <div className="size-20 rounded-full bg-orange-50 flex items-center justify-center">
-            <UserCircle2 className="size-12 text-[#D9451B]" />
-          </div>
-          <div className="text-center">
-            <h1 className="text-[28px] font-bold text-[#1E293B] tracking-tight leading-tight">
-              Create Account
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Sign up to add and manage stations
-            </p>
-          </div>
+        <div className="space-y-1">
+          <h1 className="text-[32px] font-bold text-[#1E293B] tracking-tight leading-tight">
+            {step === 'enter' ? 'Sign Up' : 'Enter Code'}
+          </h1>
+          <p className="text-slate-400 text-base font-normal">
+            {step === 'enter'
+              ? 'Create your account to get started'
+              : `We sent a 6-digit code to your ${method}`}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-[14px] font-semibold text-slate-700">
-              Full Name
-            </Label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full h-14 px-5 rounded-2xl bg-[#F1F3F4] border-transparent border text-slate-900 text-lg placeholder:text-slate-400 font-medium outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
-            />
-          </div>
+        {step === 'enter' ? (
+          <div className="space-y-6 pt-2">
+            <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700">
-              Phone Number <span className="text-slate-400 font-normal">(optional)</span>
-            </Label>
-            <div className="flex h-14 rounded-2xl overflow-hidden bg-[#F1F3F4] focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
-              <span className="flex items-center px-4 text-slate-800 font-bold text-lg border-r border-slate-200 shrink-0">
-                +234
-              </span>
-              <input
-                id="phone"
-                type="tel"
-                placeholder="Enter phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 bg-transparent px-4 text-slate-900 text-lg placeholder:text-slate-400 font-medium outline-none"
-              />
+            <div className="flex bg-[#F1F3F4] rounded-2xl p-1">
+              <button
+                type="button"
+                onClick={() => setMethod('phone')}
+                className={`flex-1 h-11 rounded-xl text-[14px] font-bold transition-all ${
+                  method === 'phone'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Phone
+              </button>
+              <button
+                type="button"
+                onClick={() => setMethod('email')}
+                className={`flex-1 h-11 rounded-xl text-[14px] font-bold transition-all ${
+                  method === 'email'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Email
+              </button>
             </div>
-          </div>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting || !name.trim()}
-            className="w-full h-14 bg-[#D9451B] hover:bg-[#C23C16] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] disabled:opacity-60 mt-2"
-          >
-            {isSubmitting ? 'Signing up...' : 'Sign Up'}
-          </Button>
-        </form>
+            <form onSubmit={handleSendCode} className="space-y-6">
+              {method === 'phone' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700 ml-1">
+                    Phone Number
+                  </Label>
+                  <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                    <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none flex items-center h-full">
+                      +234
+                    </span>
+                    <div className="w-[1px] h-6 bg-slate-300 mx-4 shrink-0" />
+                    <input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-[14px] font-semibold text-slate-700 ml-1">
+                    Email Address
+                  </Label>
+                  <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                    <input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isSending}
+                className="w-full h-14 bg-[#C2410C] hover:bg-[#A6330A] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isSending ? 'Sending...' : (
+                  <>
+                    Send Code
+                    <CheckCircle2 className="size-5 ml-1" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <form onSubmit={handleVerify} className="space-y-6 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="code" className="text-[14px] font-semibold text-slate-700 ml-1">
+                Verification Code
+              </Label>
+              <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                <input
+                  id="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="Enter your 6-digit code"
+                  className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.trim())}
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 ml-1">
+                Sent to{' '}
+                <span className="font-semibold text-slate-700">
+                  {method === 'email' ? email : fullPhone}
+                </span>
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isVerifying || !code.trim()}
+              className="w-full h-14 bg-[#C2410C] hover:bg-[#A6330A] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {isVerifying ? 'Verifying...' : 'Verify & Continue'}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => { setStep('enter'); setCode(''); }}
+              className="w-full text-slate-500 text-sm font-medium flex items-center justify-center gap-1 hover:text-slate-800"
+            >
+              <ArrowLeft className="size-4" />
+              Use a different {method === 'email' ? 'email' : 'phone number'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
