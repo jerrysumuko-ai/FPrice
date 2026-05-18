@@ -82,7 +82,7 @@ export default function FeedbackPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-primary">Feedback</h1>
-        <p className="text-muted-foreground">Report issues or suggest improvements directly to fuel companies.</p>
+        <p className="text-muted-foreground">Saw a price at the pump? Tell us — your tip helps other drivers in Calabar.</p>
       </div>
 
       <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
@@ -91,7 +91,7 @@ export default function FeedbackPage() {
             <MessageSquare className="text-primary size-5" />
             Submit Feedback
           </CardTitle>
-          <CardDescription>Fill out the form below to reach the station management.</CardDescription>
+          <CardDescription>Pick the station, tell us the price you saw, and hit send.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -118,7 +118,7 @@ export default function FeedbackPage() {
                 id="subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g., Short metering, Attendant behavior"
+                placeholder="e.g., Petrol price update, Queue situation"
                 required
               />
             </div>
@@ -129,7 +129,7 @@ export default function FeedbackPage() {
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Describe your experience in detail..."
+                placeholder="e.g., Petrol is ₦650/L here, no queue, diesel unavailable..."
                 className="min-h-[150px]"
                 required
               />
