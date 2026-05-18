@@ -128,7 +128,7 @@ export default function AddStationPage() {
 
       toast({
         title: '🎉 Station submitted!',
-        description: 'Your station is now in review. We\'ll publish it to the app once verified. Thank you!',
+        description: 'Your station is now in review. Thank you!',
         duration: 6000,
       });
       router.push('/');
