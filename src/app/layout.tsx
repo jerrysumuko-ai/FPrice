@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,11 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-body antialiased bg-background">
-        <main className="max-w-4xl mx-auto px-4 pt-4 md:pt-8">
-          {children}
-        </main>
-        <BottomNav />
-        <Toaster />
+        <ThemeProvider>
+          <main className="max-w-4xl mx-auto px-4 pt-4 md:pt-8">
+            {children}
+          </main>
+          <BottomNav />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

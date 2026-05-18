@@ -1,23 +1,53 @@
 "use client"
 
-import { useEffect, useState } from 'react';
-import { ArrowLeft, PlusCircle, ChevronRight, User, LogOut } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import {
+  ArrowLeft, PlusCircle, ChevronRight, User, LogOut,
+  Moon, Sun, Share2, Pencil, Check, X,
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import { useTheme } from '@/hooks/use-theme';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+function formatJoinDate(dateStr: string | undefined) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClient();
+  const { theme, setTheme, mounted } = useTheme();
+
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [displayName, setDisplayName] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
       setLoading(false);
+
+      if (u) {
+        const saved = localStorage.getItem(`displayName:${u.id}`);
+        if (saved) {
+          setDisplayName(saved);
+        } else {
+          const derived = u.email
+            ? u.email.split('@')[0].charAt(0).toUpperCase() + u.email.split('@')[0].slice(1)
+            : u.phone ?? 'User';
+          setDisplayName(derived);
+        }
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -33,52 +63,111 @@ export default function ProfilePage() {
   };
 
   const handleAddStation = () => {
-    if (!user) {
-      router.push('/signup?redirect=/add-station');
+    if (!user) router.push('/signup?redirect=/add-station');
+    else router.push('/add-station');
+  };
+
+  const startEditing = () => {
+    setNameInput(displayName);
+    setEditingName(true);
+    setTimeout(() => nameInputRef.current?.focus(), 50);
+  };
+
+  const saveName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && user) {
+      setDisplayName(trimmed);
+      localStorage.setItem(`displayName:${user.id}`, trimmed);
+    }
+    setEditingName(false);
+  };
+
+  const cancelEdit = () => {
+    setEditingName(false);
+    setNameInput('');
+  };
+
+  const handleShare = async () => {
+    const url = window.location.origin;
+    const text = `Find real-time fuel prices in Calabar with FuelFinder! ${url}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Calabar FuelFinder', text, url });
+      } catch {}
     } else {
-      router.push('/add-station');
+      await navigator.clipboard.writeText(text);
     }
   };
 
   if (loading) return null;
 
-  const displayName = user?.email
-    ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1)
-    : user?.phone
-    ? user.phone
-    : 'Guest';
-
   const subtitle = user?.email ?? user?.phone ?? 'Calabar FuelFinder';
+  const joinDate = formatJoinDate(user?.created_at);
+  const isDark = theme === 'dark';
 
   return (
-    <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+    <div className="bg-background min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <button
           onClick={() => router.back()}
-          className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
+          className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors active:scale-95"
         >
-          <ArrowLeft className="size-6 text-slate-800" />
+          <ArrowLeft className="size-6 text-foreground" />
         </button>
-        <h1 className="text-xl font-bold text-slate-900">Profile</h1>
+        <h1 className="text-xl font-bold text-foreground">Profile</h1>
         <div className="w-10" />
       </header>
 
       <div className="px-6 py-10 flex flex-col items-center">
-        <div className="flex flex-col items-center mb-8">
-          <div className="size-36 rounded-full bg-slate-100 flex items-center justify-center mb-3 overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-200">
-            <User className="size-24 text-slate-300" />
+        <div className="flex flex-col items-center mb-6">
+          <div className="size-36 rounded-full bg-muted flex items-center justify-center mb-3 overflow-hidden border-4 border-background shadow-md ring-1 ring-border">
+            <User className="size-24 text-muted-foreground" />
           </div>
-          <span className="text-slate-400 text-sm font-medium">
+          <span className="text-muted-foreground text-sm font-medium">
             {user ? 'Member' : 'Guest User'}
           </span>
         </div>
 
-        <div className="text-center space-y-1 mb-8">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">{displayName}</h2>
-          <p className="text-slate-400 text-sm truncate max-w-xs">{subtitle}</p>
+        <div className="text-center space-y-1 mb-2 w-full max-w-xs">
+          {editingName ? (
+            <div className="flex items-center gap-2 justify-center">
+              <input
+                ref={nameInputRef}
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') cancelEdit(); }}
+                className="text-2xl font-black text-foreground tracking-tight bg-muted rounded-xl px-3 py-1 outline-none border-2 border-primary w-full text-center"
+                maxLength={32}
+              />
+              <button onClick={saveName} className="p-1.5 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors shrink-0">
+                <Check className="size-4" />
+              </button>
+              <button onClick={cancelEdit} className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors shrink-0">
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-3xl font-black text-foreground tracking-tight">{user ? displayName : 'Guest'}</h2>
+              {user && (
+                <button
+                  onClick={startEditing}
+                  className="p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  <Pencil className="size-4" />
+                </button>
+              )}
+            </div>
+          )}
+          <p className="text-muted-foreground text-sm truncate max-w-xs">{subtitle}</p>
+          {joinDate && (
+            <p className="text-muted-foreground text-xs font-medium pt-0.5">
+              Joined {joinDate}
+            </p>
+          )}
         </div>
 
-        <Separator className="mb-10" />
+        <Separator className="my-8" />
 
         <button
           onClick={handleAddStation}
@@ -88,28 +177,72 @@ export default function ProfilePage() {
           Add Station
         </button>
 
-        <div className="w-full mt-10 space-y-0">
-          <button className="w-full flex items-center justify-between py-6 border-b border-slate-100 group text-left active:bg-slate-50/50 transition-colors">
-            <span className="text-lg text-slate-600 font-medium group-hover:text-slate-900">Help & Support</span>
-            <ChevronRight className="size-5 text-slate-400 group-active:translate-x-1 transition-transform" />
+        <div className="w-full mt-6 space-y-0 rounded-2xl overflow-hidden border border-border">
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center">
+                <Share2 className="size-4 text-[#F24E1E]" />
+              </div>
+              <span className="text-base text-foreground font-semibold">Invite a Friend</span>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
           </button>
-          <button className="w-full flex items-center justify-between py-6 border-b border-slate-100 group text-left active:bg-slate-50/50 transition-colors">
-            <span className="text-lg text-slate-600 font-medium group-hover:text-slate-900">Settings</span>
-            <ChevronRight className="size-5 text-slate-400 group-active:translate-x-1 transition-transform" />
+
+          <button
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                {mounted && isDark
+                  ? <Sun className="size-4 text-amber-500" />
+                  : <Moon className="size-4 text-slate-600 dark:text-slate-300" />
+                }
+              </div>
+              <span className="text-base text-foreground font-semibold">
+                {mounted && isDark ? 'Light Mode' : 'Dark Mode'}
+              </span>
+            </div>
+            <div className={`w-12 h-6 rounded-full transition-colors duration-300 flex items-center px-1 ${mounted && isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+              <div className={`size-4 rounded-full bg-white shadow transition-transform duration-300 ${mounted && isDark ? 'translate-x-6' : 'translate-x-0'}`} />
+            </div>
+          </button>
+
+          <button className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
+                <ChevronRight className="size-4 text-blue-500" />
+              </div>
+              <span className="text-base text-foreground font-semibold">Help & Support</span>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
+          </button>
+
+          <button className="w-full flex items-center justify-between px-5 py-5 bg-card group text-left active:bg-muted/60 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <ChevronRight className="size-4 text-slate-500" />
+              </div>
+              <span className="text-base text-foreground font-semibold">Settings</span>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
           </button>
         </div>
 
         {user ? (
           <button
             onClick={handleLogout}
-            className="w-full h-16 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 active:scale-[0.99] text-slate-800 font-bold text-lg rounded-2xl mt-12 transition-all flex items-center justify-center gap-2"
+            className="w-full h-16 bg-muted hover:bg-muted/80 active:scale-[0.99] text-foreground font-bold text-lg rounded-2xl mt-8 transition-all flex items-center justify-center gap-2"
           >
             <LogOut className="size-5" />
             Log Out
           </button>
         ) : (
-          <Link href="/signup" className="w-full mt-12">
-            <button className="w-full h-16 bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg rounded-2xl transition-all flex items-center justify-center">
+          <Link href="/signup" className="w-full mt-8">
+            <button className="w-full h-16 bg-foreground hover:opacity-90 text-background font-bold text-lg rounded-2xl transition-all flex items-center justify-center">
               Sign Up / Log In
             </button>
           </Link>
