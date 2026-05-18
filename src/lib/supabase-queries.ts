@@ -103,6 +103,10 @@ function slugify(input: string): string {
   );
 }
 
+// Calabar city-centre fallback coordinates
+const CALABAR_LAT = 4.9517;
+const CALABAR_LNG = 8.3220;
+
 export async function createStation(args: {
   name: string;
   address: string;
@@ -113,11 +117,10 @@ export async function createStation(args: {
 }): Promise<FuelStation> {
   const supabase = createClient();
   const id = `${slugify(args.name)}-${Date.now().toString(36)}`;
-  const now = new Date();
-  const lastUpdated = now.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+
+  // Never store base64 data URLs — they bloat the DB. Only store remote URLs.
+  const safeLogoUrl =
+    args.logoUrl && !args.logoUrl.startsWith('data:') ? args.logoUrl : null;
 
   const { data, error } = await supabase
     .from('stations')
@@ -130,12 +133,12 @@ export async function createStation(args: {
       is_open: true,
       distance: '',
       rating: 0,
-      lat: 0,
-      lng: 0,
+      lat: CALABAR_LAT,
+      lng: CALABAR_LNG,
       image: `https://picsum.photos/seed/${id}/600/400`,
-      last_updated: lastUpdated,
+      last_updated: new Date().toISOString(),
       phone: args.phone ?? null,
-      logo_url: args.logoUrl ?? null,
+      logo_url: safeLogoUrl,
     })
     .select()
     .single();

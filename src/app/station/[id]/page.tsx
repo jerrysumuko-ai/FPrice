@@ -237,7 +237,7 @@ export default function StationDetailPage() {
       </header>
 
       <div className="bg-slate-50 px-4 py-2 text-right border-b">
-        <span className="text-xs text-slate-500">Last updated: {station.lastUpdated}</span>
+        <span className="text-xs text-slate-500">Last updated: {(() => { try { const d = new Date(station.lastUpdated); return isNaN(d.getTime()) ? station.lastUpdated : d.toLocaleString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return station.lastUpdated; } })()}</span>
       </div>
 
       <div className="p-4 grid grid-cols-2 gap-4">

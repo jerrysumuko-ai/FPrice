@@ -76,15 +76,23 @@ export default function AddStationPage() {
       return;
     }
 
+    const petrol = Number(petrolPrice);
+    const diesel = Number(dieselPrice);
+    if (petrol <= 0 || diesel <= 0) {
+      toast({ variant: 'destructive', title: 'Invalid prices', description: 'Prices must be greater than zero.' });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await createStation({
         name: stationName,
         address: stationAddress,
-        petrolPrice: Number(petrolPrice),
-        dieselPrice: Number(dieselPrice),
+        petrolPrice: petrol,
+        dieselPrice: diesel,
         phone: phone || undefined,
-        logoUrl: logoPreview || undefined,
+        // base64 previews are filtered out server-side; only remote URLs are stored
+        logoUrl: logoPreview && !logoPreview.startsWith('data:') ? logoPreview : undefined,
       });
       toast({
         title: "Station Registered",
