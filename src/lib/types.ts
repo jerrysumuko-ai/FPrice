@@ -11,6 +11,9 @@ export interface FuelStation {
   lng: number;
   image: string;
   lastUpdated: string;
+  phone?: string;
+  logoUrl?: string;
+  status: string;
 }
 
 export interface NewsAlert {
@@ -34,6 +37,9 @@ export type StationRow = {
   lng: number;
   image: string;
   last_updated: string;
+  phone?: string;
+  logo_url?: string;
+  status: string;
 };
 
 export type NewsRow = {
@@ -58,6 +64,9 @@ export function rowToStation(row: StationRow): FuelStation {
     lng: Number(row.lng),
     image: row.image,
     lastUpdated: row.last_updated,
+    phone: row.phone,
+    logoUrl: row.logo_url,
+    status: row.status ?? 'approved',
   };
 }
 

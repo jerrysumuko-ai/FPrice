@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Camera, X, Check, Info } from 'lucide-react';
+import { ArrowLeft, Camera, X, Check, Info, MapPin, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,73 +9,100 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { createStation } from '@/lib/supabase-queries';
+import { createStation, uploadStationPhoto } from '@/lib/supabase-queries';
+
+type GpsState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function AddStationPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Flow State
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Step 1 State
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  // Step 1 fields
   const [stationName, setStationName] = useState('');
   const [stationAddress, setStationAddress] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Photo (required)
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 2 State
+  // GPS (required)
+  const [gpsState, setGpsState] = useState<GpsState>('idle');
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Step 2 fields
   const [petrolPrice, setPetrolPrice] = useState('680');
   const [dieselPrice, setDieselPrice] = useState('750');
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogoClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          variant: "destructive",
-          title: "File too large",
-          description: "Please select an image smaller than 2MB.",
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ variant: 'destructive', title: 'File too large', description: 'Please select an image under 10MB.' });
+      return;
     }
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
-  const removeLogo = (e: React.MouseEvent) => {
+  const removePhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setLogoPreview(null);
+    setPhotoFile(null);
+    setPhotoPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsError('GPS is not supported on this device.');
+      setGpsState('error');
+      return;
+    }
+    setGpsState('loading');
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsState('success');
+      },
+      (err) => {
+        const msg =
+          err.code === 1
+            ? 'Location permission denied. Please allow GPS access in your browser settings and try again.'
+            : 'Could not get your location. Make sure GPS is on and try again.';
+        setGpsError(msg);
+        setGpsState('error');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   };
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!photoFile) {
+      toast({ variant: 'destructive', title: 'Photo required', description: 'Please take or upload a photo of the station.' });
+      return;
+    }
+    if (!coords) {
+      toast({ variant: 'destructive', title: 'Location required', description: 'Please tap "Get My Location" to capture your GPS coordinates.' });
+      return;
+    }
     setStep(2);
   };
 
   const handleFinish = async () => {
     if (!isAuthorized) {
-      toast({
-        variant: "destructive",
-        title: "Authorization required",
-        description: "Please confirm you are authorized to manage this station.",
-      });
+      toast({ variant: 'destructive', title: 'Authorization required', description: 'Please confirm you are authorized to manage this station.' });
       return;
     }
-
     const petrol = Number(petrolPrice);
     const diesel = Number(dieselPrice);
     if (petrol <= 0 || diesel <= 0) {
@@ -85,25 +112,34 @@ export default function AddStationPage() {
 
     setIsSubmitting(true);
     try {
+      // Upload the photo to Supabase Storage first
+      const photoUrl = await uploadStationPhoto(photoFile!);
+
       await createStation({
         name: stationName,
         address: stationAddress,
         petrolPrice: petrol,
         dieselPrice: diesel,
+        lat: coords!.lat,
+        lng: coords!.lng,
+        photoUrl,
         phone: phone || undefined,
-        // base64 previews are filtered out server-side; only remote URLs are stored
-        logoUrl: logoPreview && !logoPreview.startsWith('data:') ? logoPreview : undefined,
       });
+
       toast({
-        title: "Station Registered",
-        description: "Your station has been submitted successfully.",
+        title: 'Station submitted!',
+        description: 'Your station is pending review. It will appear in the app once approved.',
       });
-      router.push('/profile');
+      router.push('/');
     } catch (err: any) {
+      const msg = err?.message ?? 'Please try again.';
+      const isStorageErr = msg.toLowerCase().includes('bucket') || msg.toLowerCase().includes('storage');
       toast({
-        variant: "destructive",
-        title: "Could not register station",
-        description: err?.message ?? "Please try again later.",
+        variant: 'destructive',
+        title: 'Could not submit station',
+        description: isStorageErr
+          ? 'Photo upload failed. Make sure the "station-photos" storage bucket exists in Supabase.'
+          : msg,
       });
     } finally {
       setIsSubmitting(false);
@@ -114,109 +150,166 @@ export default function AddStationPage() {
     <div className="bg-[#F8F9FA] min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col">
       <div className="bg-white min-h-screen w-full">
         {step === 1 ? (
-          <div className="px-6 space-y-8 max-w-lg mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="px-6 space-y-7 max-w-lg mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-300">
             <header className="flex items-center -ml-2 py-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
-              >
+              <button onClick={() => router.back()} className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95">
                 <ArrowLeft className="size-7 text-slate-800" />
               </button>
               <h1 className="text-2xl font-bold text-slate-800 ml-2">Register Your Station</h1>
             </header>
 
-            <p className="text-slate-500 text-[15px] leading-relaxed">
-              Add your branch so drivers can find you and see real-time fuel prices.
+            <p className="text-slate-500 text-[15px] leading-relaxed -mt-2">
+              You must be physically at the station to register it.
             </p>
 
-            <form onSubmit={handleNextStep} className="space-y-8 pb-10">
-              {/* Upload Logo Section */}
-              <div className="flex flex-col items-center justify-center py-2 space-y-2">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-                <div
-                  onClick={handleLogoClick}
-                  className="relative group cursor-pointer"
-                >
-                  <div className="size-32 rounded-full border-2 border-dashed border-slate-300 flex flex-col items-center justify-center space-y-1 bg-slate-50/50 hover:bg-slate-100 transition-all overflow-hidden relative">
-                    {logoPreview ? (
-                      <>
-                        <Image
-                          src={logoPreview}
-                          alt="Logo preview"
-                          fill
-                          className="object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Camera className="size-8 text-white" />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="size-8 text-slate-400" />
-                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Upload Logo</span>
-                      </>
-                    )}
-                  </div>
-                  {logoPreview && (
-                    <button
-                      type="button"
-                      onClick={removeLogo}
-                      className="absolute -top-1 -right-1 bg-slate-800 text-white rounded-full p-1 shadow-md hover:bg-slate-900 transition-colors"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  )}
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium">PNG or JPG, max 2MB</p>
-              </div>
+            <form onSubmit={handleNextStep} className="space-y-7 pb-10">
 
+              {/* ── Station Name ── */}
               <div className="space-y-2">
-                <Label htmlFor="station-name" className="text-slate-700 font-semibold">Station Name</Label>
+                <Label htmlFor="station-name" className="text-slate-700 font-semibold">Station Name <span className="text-red-500">*</span></Label>
                 <Input
                   id="station-name"
                   value={stationName}
                   onChange={(e) => setStationName(e.target.value)}
-                  placeholder="e.g. Total Energies – Lekki Phase 1"
-                  className="h-14 bg-white border-slate-200 rounded-lg text-lg"
+                  placeholder="e.g. Total Energies – Murtala Muhammed Way"
+                  className="h-14 bg-white border-slate-200 rounded-lg text-base"
                   required
                 />
               </div>
 
+              {/* ── Address ── */}
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-slate-700 font-semibold">Station Address</Label>
+                <Label htmlFor="address" className="text-slate-700 font-semibold">Station Address <span className="text-red-500">*</span></Label>
                 <Input
                   id="address"
                   value={stationAddress}
                   onChange={(e) => setStationAddress(e.target.value)}
-                  placeholder="Enter full address"
-                  className="h-14 bg-white border-slate-200 rounded-lg text-lg"
+                  placeholder="Full street address"
+                  className="h-14 bg-white border-slate-200 rounded-lg text-base"
                   required
                 />
               </div>
 
+              {/* ── Phone ── */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-slate-700 font-semibold">Phone Number</Label>
+                <Label htmlFor="phone" className="text-slate-700 font-semibold">Phone Number <span className="text-slate-400 font-normal">(optional)</span></Label>
                 <div className="flex h-14">
-                  <div className="flex items-center justify-center px-4 border border-r-0 border-slate-200 rounded-l-lg bg-slate-50 text-slate-800 font-bold text-lg leading-none">
+                  <div className="flex items-center justify-center px-4 border border-r-0 border-slate-200 rounded-l-lg bg-slate-50 text-slate-800 font-bold text-base leading-none">
                     +234
                   </div>
                   <Input
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="optional"
-                    className="h-full bg-white border-slate-200 rounded-l-none rounded-r-lg text-lg"
+                    placeholder="Station phone number"
+                    className="h-full bg-white border-slate-200 rounded-l-none rounded-r-lg text-base"
                   />
                 </div>
               </div>
 
-              <div className="pt-4">
+              {/* ── Photo (required) ── */}
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">
+                  Station Photo <span className="text-red-500">*</span>
+                </Label>
+                <p className="text-xs text-slate-400">Take or upload a clear photo of the station. This helps with verification.</p>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
+
+                {photoPreview ? (
+                  <div className="relative rounded-2xl overflow-hidden border-2 border-[#D9451B]">
+                    <div className="relative w-full h-52">
+                      <Image src={photoPreview} alt="Station photo" fill className="object-cover" />
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-white/90 backdrop-blur-sm text-slate-800 rounded-full px-3 py-1.5 text-xs font-bold shadow flex items-center gap-1"
+                      >
+                        <Camera className="size-3.5" /> Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="bg-white/90 backdrop-blur-sm text-red-600 rounded-full p-1.5 shadow"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                    <div className="absolute bottom-2 left-2 bg-green-500 text-white rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1">
+                      <Check className="size-3" /> Photo captured
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-44 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors flex flex-col items-center justify-center gap-2"
+                  >
+                    <div className="size-14 rounded-full bg-slate-200 flex items-center justify-center">
+                      <Camera className="size-7 text-slate-500" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-600">Tap to take / upload photo</span>
+                    <span className="text-xs text-slate-400">JPG or PNG, up to 10MB</span>
+                  </button>
+                )}
+              </div>
+
+              {/* ── GPS Location (required) ── */}
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">
+                  Your Location <span className="text-red-500">*</span>
+                </Label>
+                <p className="text-xs text-slate-400">We capture your real GPS coordinates. Make sure you are standing at the station.</p>
+
+                {gpsState === 'success' && coords ? (
+                  <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-4">
+                    <CheckCircle2 className="size-6 text-green-600 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-green-800">Location captured</p>
+                      <p className="text-xs text-green-600 font-mono truncate">
+                        {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      className="text-xs font-semibold text-green-700 underline shrink-0"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : gpsState === 'error' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-4">
+                      <AlertCircle className="size-5 text-red-500 shrink-0 mt-0.5" />
+                      <p className="text-sm text-red-700">{gpsError}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      className="w-full h-12 rounded-2xl border-2 border-slate-300 text-slate-700 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                    >
+                      <MapPin className="size-4" /> Try Again
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={gpsState === 'loading'}
+                    className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {gpsState === 'loading' ? (
+                      <><Loader2 className="size-5 animate-spin" /> Getting location…</>
+                    ) : (
+                      <><MapPin className="size-5" /> Get My Location</>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              <div className="pt-2 pb-12">
                 <Button
                   type="submit"
                   className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
@@ -226,31 +319,25 @@ export default function AddStationPage() {
               </div>
             </form>
           </div>
+
         ) : (
           <div className="px-6 space-y-6 max-w-lg mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-300">
             <header className="flex items-center -ml-2 py-4">
-              <button
-                onClick={() => setStep(1)}
-                className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
-              >
+              <button onClick={() => setStep(1)} className="p-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95">
                 <ArrowLeft className="size-7 text-slate-800" />
               </button>
               <h1 className="text-2xl font-bold text-slate-800 ml-2">Set Fuel Prices</h1>
             </header>
 
-            <p className="text-slate-500 text-[15px] leading-relaxed -mt-4">
-              Enter the prices for Petrol and Diesel at your station.
-            </p>
-
             {/* Stepper */}
-            <div className="flex items-center justify-center py-6">
+            <div className="flex items-center justify-center py-4">
               <div className="flex flex-col items-center">
                 <div className="size-10 rounded-full bg-[#D9451B] flex items-center justify-center text-white">
                   <Check className="size-6" />
                 </div>
                 <span className="text-[13px] font-bold text-slate-700 mt-2">Details</span>
               </div>
-              <div className="w-24 h-[2px] bg-slate-200 -mt-6 mx-2" />
+              <div className="w-24 h-[2px] bg-[#D9451B] -mt-6 mx-2" />
               <div className="flex flex-col items-center">
                 <div className="size-10 rounded-full border-2 border-[#D9451B] flex items-center justify-center text-[#D9451B] font-bold">
                   2
@@ -259,46 +346,47 @@ export default function AddStationPage() {
               </div>
             </div>
 
+            {/* Pending notice */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-4 flex items-start gap-3">
+              <Info className="size-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">Pending review</p>
+                <p className="text-xs text-amber-700 leading-snug mt-0.5">
+                  Your station will be reviewed before appearing publicly in the app.
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-6">
-              {/* Petrol Card */}
+              {/* Petrol */}
               <div className="overflow-hidden border rounded-xl shadow-sm bg-white">
-                <div className="bg-[#109D3E] px-4 py-2 text-white font-bold text-xl">
-                  Petrol
-                </div>
+                <div className="bg-[#109D3E] px-4 py-2 text-white font-bold text-xl">Petrol</div>
                 <div className="p-4 relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">
-                    ₦
-                  </div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">₦</div>
                   <Input
                     type="number"
+                    min="1"
                     value={petrolPrice}
                     onChange={(e) => setPetrolPrice(e.target.value)}
                     className="h-14 pl-12 pr-24 text-xl font-bold bg-slate-50 border-none rounded-lg"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4 leading-none">
-                    ₦ per liter
-                  </div>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4 leading-none">₦ per litre</div>
                 </div>
               </div>
 
-              {/* Diesel Card */}
+              {/* Diesel */}
               <div className="overflow-hidden border rounded-xl shadow-sm bg-white">
-                <div className="bg-[#3B4453] px-4 py-2 text-white font-bold text-xl">
-                  Diesel
-                </div>
+                <div className="bg-[#3B4453] px-4 py-2 text-white font-bold text-xl">Diesel</div>
                 <div className="p-4 relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">
-                    ₦
-                  </div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-lg pointer-events-none pl-4 leading-none">₦</div>
                   <Input
                     type="number"
+                    min="1"
                     value={dieselPrice}
                     onChange={(e) => setDieselPrice(e.target.value)}
                     className="h-14 pl-12 pr-24 text-xl font-bold bg-slate-50 border-none rounded-lg"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4 leading-none">
-                    ₦ per liter
-                  </div>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pr-4 leading-none">₦ per litre</div>
                 </div>
               </div>
 
@@ -306,34 +394,23 @@ export default function AddStationPage() {
                 <Checkbox
                   id="authorized"
                   checked={isAuthorized}
-                  onCheckedChange={(checked) => setIsAuthorized(checked as boolean)}
+                  onCheckedChange={(v) => setIsAuthorized(v as boolean)}
                   className="size-6 border-slate-300 data-[state=checked]:bg-[#D9451B] data-[state=checked]:border-[#D9451B]"
                 />
-                <label
-                  htmlFor="authorized"
-                  className="text-sm font-medium text-slate-600 cursor-pointer leading-tight"
-                >
-                  I confirm I am authorized to manage this station
+                <label htmlFor="authorized" className="text-sm font-medium text-slate-600 cursor-pointer leading-tight">
+                  I confirm I am authorized to represent this station
                 </label>
-              </div>
-
-              {/* Info Box */}
-              <div className="bg-[#FFF3F0] p-4 rounded-xl flex items-start gap-3 border border-orange-100">
-                <div className="size-5 bg-[#D9451B] rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                  <Info className="size-3 text-white" />
-                </div>
-                <p className="text-[13px] text-slate-700 leading-tight">
-                  Tap 'Finish' to complete your station registration. You can update fuel prices at any time.
-                </p>
               </div>
 
               <div className="pt-4 pb-12">
                 <Button
                   onClick={handleFinish}
                   disabled={isSubmitting}
-                  className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
+                  className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-60"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Finish'}
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" /> Submitting…</span>
+                  ) : 'Submit for Review'}
                 </Button>
               </div>
             </div>
