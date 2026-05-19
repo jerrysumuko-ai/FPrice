@@ -126,6 +126,7 @@ export async function createStation(args: {
   lng: number;
   photoUrl: string;
   phone?: string;
+  placeName?: string;
 }): Promise<FuelStation> {
   const supabase = createClient();
   const id = `${slugify(args.name)}-${Date.now().toString(36)}`;
@@ -147,6 +148,7 @@ export async function createStation(args: {
       last_updated: new Date().toISOString(),
       phone: args.phone ?? null,
       logo_url: null,
+      place_name: args.placeName ?? null,
       status: 'pending',
     })
     .select()

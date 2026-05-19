@@ -33,6 +33,7 @@ export default function AddStationPage() {
   const [gpsState, setGpsState] = useState<GpsState>('idle');
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [placeName, setPlaceName] = useState<string | null>(null);
 
   // Step 2 fields
   const [petrolPrice, setPetrolPrice] = useState('680');
@@ -86,6 +87,8 @@ export default function AddStationPage() {
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
         );
         const data = await res.json();
+        // Store the exact Nominatim display_name as the crowd-sourced place identifier
+        if (data.display_name) setPlaceName(data.display_name);
         const addr = data.address ?? {};
         const parts = [
           addr.house_number ? `${addr.house_number} ${addr.road ?? ''}`.trim() : addr.road,
@@ -166,6 +169,7 @@ export default function AddStationPage() {
         lng: coords!.lng,
         photoUrl,
         phone: phone || undefined,
+        placeName: placeName ?? undefined,
       });
 
       toast({

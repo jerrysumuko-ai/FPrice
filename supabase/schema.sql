@@ -21,6 +21,7 @@ create table if not exists stations (
   last_updated  text       not null default '',
   phone         text,
   logo_url      text,
+  place_name    text,
   status        text       not null default 'approved'
                            check (status in ('pending', 'approved', 'rejected')),
   created_at    timestamptz not null default now()
@@ -32,6 +33,9 @@ do $$ begin
     check (status in ('pending', 'approved', 'rejected'));
 exception when others then null;
 end $$;
+
+-- Add place_name column to existing tables (safe if already present)
+alter table stations add column if not exists place_name text;
 
 create table if not exists news_alerts (
   id          text primary key,

@@ -13,6 +13,7 @@ export interface FuelStation {
   lastUpdated: string;
   phone?: string;
   logoUrl?: string;
+  placeName?: string;
   status: string;
 }
 
@@ -39,6 +40,7 @@ export type StationRow = {
   last_updated: string;
   phone?: string;
   logo_url?: string;
+  place_name?: string;
   status: string;
 };
 
@@ -66,6 +68,7 @@ export function rowToStation(row: StationRow): FuelStation {
     lastUpdated: row.last_updated,
     phone: row.phone,
     logoUrl: row.logo_url,
+    placeName: row.place_name,
     status: row.status ?? 'approved',
   };
 }
