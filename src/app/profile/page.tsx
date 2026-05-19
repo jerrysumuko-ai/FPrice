@@ -42,33 +42,42 @@ export default function ProfilePage() {
   const fetchLocation = () => {
     if (!navigator.geolocation) return;
     setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`
-          );
-          const data = await res.json();
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.county ||
-            '';
-          const state = data.address?.state || '';
-          const label = [city, state].filter(Boolean).join(', ');
-          if (label) {
-            setLocation(label);
-            localStorage.setItem('fuelfinder_location', label);
-          }
-        } catch {
-          // silently ignore
-        } finally {
-          setLocationLoading(false);
+
+    const resolveLabel = async (latitude: number, longitude: number) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+        );
+        const data = await res.json();
+        const addr = data.address ?? {};
+        const district =
+          addr.city_district || addr.county || addr.suburb || addr.neighbourhood || '';
+        const city = addr.city || addr.town || addr.village || '';
+        const label = [district, city].filter(Boolean).join(', ');
+        if (label) {
+          setLocation(label);
+          localStorage.setItem('fuelfinder_location', label);
         }
-      },
-      () => setLocationLoading(false),
-      { timeout: 8000 }
+      } catch {
+        // silently ignore
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    const onError = () => {
+      // High-accuracy failed — retry with network-based location
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => resolveLabel(coords.latitude, coords.longitude),
+        () => setLocationLoading(false),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolveLabel(coords.latitude, coords.longitude),
+      onError,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
