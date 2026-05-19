@@ -173,9 +173,9 @@ export default function ProfilePage() {
           <div className="size-36 rounded-full bg-muted flex items-center justify-center mb-3 overflow-hidden border-4 border-background shadow-md ring-1 ring-border">
             <User className="size-24 text-muted-foreground" />
           </div>
-          <span className="text-muted-foreground text-sm font-medium">
-            {user ? 'Member' : 'Guest User'}
-          </span>
+          {user && (
+            <span className="text-muted-foreground text-sm font-medium">Member</span>
+          )}
         </div>
 
         <div className="text-center space-y-1 mb-2 w-full max-w-xs">
@@ -198,7 +198,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
-              <h2 className="text-3xl font-black text-foreground tracking-tight">{user ? displayName : 'Guest'}</h2>
+              <h2 className="text-3xl font-black text-foreground tracking-tight">{displayName}</h2>
               {user && (
                 <button
                   onClick={startEditing}
@@ -209,7 +209,7 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-          <p className="text-muted-foreground text-sm truncate max-w-xs">{subtitle}</p>
+          {user && <p className="text-muted-foreground text-sm truncate max-w-xs">{subtitle}</p>}
           <button
             onClick={fetchLocation}
             disabled={locationLoading}
