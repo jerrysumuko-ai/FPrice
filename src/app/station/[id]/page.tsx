@@ -106,17 +106,24 @@ export default function StationDetailPage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const s = await fetchStationById(stationId);
-      if (cancelled) return;
-      setStation(s);
-      setLoading(false);
+      try {
+        const s = await fetchStationById(stationId);
+        if (cancelled) return;
+        setStation(s);
 
-      const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
-      const newRecent = [stationId, ...recent.filter((i: string) => i !== stationId)].slice(0, 3);
-      localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
+        if (s) {
+          const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
+          const newRecent = [stationId, ...recent.filter((i: string) => i !== stationId)].slice(0, 3);
+          localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
 
-      const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
-      setIsFavourite(favs.includes(stationId));
+          const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
+          setIsFavourite(favs.includes(stationId));
+        }
+      } catch (err) {
+        console.error('Failed to load station:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
