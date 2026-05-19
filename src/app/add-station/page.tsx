@@ -84,14 +84,15 @@ export default function AddStationPage() {
         // Reverse-geocode to fill address
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
           );
           const data = await res.json();
           const addr = data.address ?? {};
           const parts = [
-            addr.road,
-            addr.neighbourhood || addr.suburb,
-            addr.city || addr.town || addr.village || addr.county,
+            addr.house_number ? `${addr.house_number} ${addr.road ?? ''}`.trim() : addr.road,
+            addr.neighbourhood || addr.quarter || addr.suburb || addr.village,
+            addr.city_district || addr.county,
+            addr.city || addr.town || addr.state_district,
           ].filter(Boolean);
           if (parts.length > 0) setStationAddress(parts.join(', '));
         } catch {
