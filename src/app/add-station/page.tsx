@@ -215,6 +215,11 @@ export default function AddStationPage() {
                   className="h-14 bg-white border-slate-200 rounded-lg text-base"
                   required
                 />
+                {gpsState === 'success' && (
+                  <p className="text-xs text-amber-600 font-medium flex items-center gap-1">
+                    <Info className="size-3 shrink-0" /> Auto-filled — please review and edit if needed.
+                  </p>
+                )}
 
                 {/* Use Current Location card */}
                 <div className={`flex rounded-xl overflow-hidden border ${gpsState === 'error' ? 'border-red-300' : 'border-slate-200'} h-14`}>
