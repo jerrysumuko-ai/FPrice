@@ -76,39 +76,55 @@ export default function AddStationPage() {
     }
     setGpsState('loading');
     setGpsError(null);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        setCoords({ lat, lng });
-        setGpsState('success');
-        // Reverse-geocode to fill address
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
-          );
-          const data = await res.json();
-          const addr = data.address ?? {};
-          const parts = [
-            addr.house_number ? `${addr.house_number} ${addr.road ?? ''}`.trim() : addr.road,
-            addr.neighbourhood || addr.quarter || addr.suburb || addr.village,
-            addr.city_district || addr.county,
-            addr.city || addr.town || addr.state_district,
-          ].filter(Boolean);
-          if (parts.length > 0) setStationAddress(parts.join(', '));
-        } catch {
-          // silently ignore — user can still type the address manually
-        }
-      },
-      (err) => {
-        const msg =
-          err.code === 1
-            ? 'Location permission denied. Please allow GPS access in your browser settings.'
-            : 'Could not get your location. Make sure GPS is on and try again.';
-        setGpsError(msg);
+
+    const onSuccess = async (pos: GeolocationPosition) => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      setCoords({ lat, lng });
+      setGpsState('success');
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
+        );
+        const data = await res.json();
+        const addr = data.address ?? {};
+        const parts = [
+          addr.house_number ? `${addr.house_number} ${addr.road ?? ''}`.trim() : addr.road,
+          addr.neighbourhood || addr.quarter || addr.suburb || addr.village,
+          addr.city_district || addr.county,
+          addr.city || addr.town || addr.state_district,
+        ].filter(Boolean);
+        if (parts.length > 0) setStationAddress(parts.join(', '));
+      } catch {
+        // silently ignore — user can type address manually
+      }
+    };
+
+    const onError = (err: GeolocationPositionError) => {
+      if (err.code === 1) {
+        setGpsError('Location permission denied. Please allow GPS access in your browser settings.');
         setGpsState('error');
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+        return;
+      }
+      // High-accuracy timed out or position unavailable — retry with network-based location
+      navigator.geolocation.getCurrentPosition(
+        onSuccess,
+        () => {
+          const msg =
+            err.code === 3
+              ? 'Location timed out. Move to an open area and try again.'
+              : 'Could not get your location. Make sure location services are enabled.';
+          setGpsError(msg);
+          setGpsState('error');
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    };
+
+    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
   };
 
   const handleNextStep = (e: React.FormEvent) => {
