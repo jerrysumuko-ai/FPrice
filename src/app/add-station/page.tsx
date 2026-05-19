@@ -60,6 +60,14 @@ export default function AddStationPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const getMapTileUrl = (lat: number, lng: number) => {
+    const z = 15;
+    const x = Math.floor((lng + 180) / 360 * Math.pow(2, z));
+    const latRad = lat * Math.PI / 180;
+    const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z));
+    return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  };
+
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       setGpsError('GPS is not supported on this device.');
@@ -69,14 +77,31 @@ export default function AddStationPage() {
     setGpsState('loading');
     setGpsError(null);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setCoords({ lat, lng });
         setGpsState('success');
+        // Reverse-geocode to fill address
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+          );
+          const data = await res.json();
+          const addr = data.address ?? {};
+          const parts = [
+            addr.road,
+            addr.neighbourhood || addr.suburb,
+            addr.city || addr.town || addr.village || addr.county,
+          ].filter(Boolean);
+          if (parts.length > 0) setStationAddress(parts.join(', '));
+        } catch {
+          // silently ignore — user can still type the address manually
+        }
       },
       (err) => {
         const msg =
           err.code === 1
-            ? 'Location permission denied. Please allow GPS access in your browser settings and try again.'
+            ? 'Location permission denied. Please allow GPS access in your browser settings.'
             : 'Could not get your location. Make sure GPS is on and try again.';
         setGpsError(msg);
         setGpsState('error');
@@ -178,17 +203,55 @@ export default function AddStationPage() {
                 />
               </div>
 
-              {/* ── Address ── */}
+              {/* ── Address + Location ── */}
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-slate-700 font-semibold">Station Address <span className="text-red-500">*</span></Label>
+                <Label htmlFor="address" className="text-slate-700 font-semibold">Address <span className="text-red-500">*</span></Label>
                 <Input
                   id="address"
                   value={stationAddress}
                   onChange={(e) => setStationAddress(e.target.value)}
-                  placeholder="Full street address"
+                  placeholder="Enter full address"
                   className="h-14 bg-white border-slate-200 rounded-lg text-base"
                   required
                 />
+
+                {/* Use Current Location card */}
+                <div className={`flex rounded-xl overflow-hidden border ${gpsState === 'error' ? 'border-red-300' : 'border-slate-200'} h-14`}>
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={gpsState === 'loading'}
+                    className="flex-1 flex items-center gap-3 px-4 bg-white hover:bg-slate-50 transition-colors active:bg-slate-100 disabled:opacity-60"
+                  >
+                    {gpsState === 'loading' ? (
+                      <Loader2 className="size-5 text-[#1a73e8] animate-spin shrink-0" />
+                    ) : gpsState === 'success' ? (
+                      <CheckCircle2 className="size-5 text-green-600 shrink-0" />
+                    ) : (
+                      <MapPin className="size-5 text-[#1a73e8] shrink-0" />
+                    )}
+                    <span className={`text-sm font-medium ${gpsState === 'success' ? 'text-green-700' : gpsState === 'error' ? 'text-red-600' : 'text-slate-700'}`}>
+                      {gpsState === 'loading' ? 'Getting location…' :
+                       gpsState === 'success' ? 'Location captured — tap to update' :
+                       gpsState === 'error' ? (gpsError ?? 'Try again') :
+                       'Use Current Location'}
+                    </span>
+                  </button>
+                  <div className="w-16 shrink-0 border-l border-slate-200 overflow-hidden bg-slate-100">
+                    {coords ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getMapTileUrl(coords.lat, coords.lng)}
+                        alt="map"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <MapPin className="size-5 text-slate-300" />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* ── Phone ── */}
@@ -256,59 +319,6 @@ export default function AddStationPage() {
                 )}
               </div>
 
-              {/* ── GPS Location (required) ── */}
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-semibold">
-                  Your Location <span className="text-red-500">*</span>
-                </Label>
-                <p className="text-xs text-slate-400">We capture your real GPS coordinates. Make sure you are standing at the station.</p>
-
-                {gpsState === 'success' && coords ? (
-                  <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-4">
-                    <CheckCircle2 className="size-6 text-green-600 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-green-800">Location captured</p>
-                      <p className="text-xs text-green-600 font-mono truncate">
-                        {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      className="text-xs font-semibold text-green-700 underline shrink-0"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                ) : gpsState === 'error' ? (
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-4">
-                      <AlertCircle className="size-5 text-red-500 shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-700">{gpsError}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      className="w-full h-12 rounded-2xl border-2 border-slate-300 text-slate-700 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
-                    >
-                      <MapPin className="size-4" /> Try Again
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleGetLocation}
-                    disabled={gpsState === 'loading'}
-                    className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
-                  >
-                    {gpsState === 'loading' ? (
-                      <><Loader2 className="size-5 animate-spin" /> Getting location…</>
-                    ) : (
-                      <><MapPin className="size-5" /> Get My Location</>
-                    )}
-                  </button>
-                )}
-              </div>
 
               <div className="pt-2 pb-12">
                 <Button
