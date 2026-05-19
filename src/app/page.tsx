@@ -150,17 +150,13 @@ export default function Home() {
                     key={station.id}
                     className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
                   >
-                    <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
-                      {isMobil ? (
-                        <MobilIcon className="w-8 h-auto" />
-                      ) : isShafa ? (
-                        <ShafaIcon className="w-10 h-auto" />
-                      ) : isUddyKing ? (
-                        <UddyKingIcon className="w-8 h-auto" />
-                      ) : isNNPC ? (
-                        <NNPCIcon className="w-10 h-auto" />
+                    <div className="size-11 rounded-full shrink-0 bg-slate-100 overflow-hidden">
+                      {station.image ? (
+                        <img src={station.image} alt={station.name} className="w-full h-full object-cover" />
                       ) : (
-                        <Fuel className="size-5 text-slate-400" />
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Fuel className="size-5 text-slate-400" />
+                        </div>
                       )}
                     </div>
                     <div className="flex-1 py-1">
@@ -197,17 +193,13 @@ export default function Home() {
                       key={station.id}
                       className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
                     >
-                      <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden">
-                        {isMobil ? (
-                          <MobilIcon className="w-8 h-auto" />
-                        ) : isShafa ? (
-                          <ShafaIcon className="w-10 h-auto" />
-                        ) : isUddyKing ? (
-                          <UddyKingIcon className="w-8 h-auto" />
-                        ) : isNNPC ? (
-                          <NNPCIcon className="w-10 h-auto" />
+                      <div className="size-11 rounded-full shrink-0 bg-slate-100 overflow-hidden">
+                        {station.image ? (
+                          <img src={station.image} alt={station.name} className="w-full h-full object-cover" />
                         ) : (
-                          <Fuel className="size-5 text-slate-400" />
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Fuel className="size-5 text-slate-400" />
+                          </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

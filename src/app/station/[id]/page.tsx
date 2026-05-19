@@ -219,17 +219,13 @@ export default function StationDetailPage() {
             <ArrowLeft className="size-6 text-slate-800" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <div className="size-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden p-1">
-              {isMobil ? (
-                <MobilIcon className="w-full h-auto" />
-              ) : isShafa ? (
-                <ShafaIcon className="w-full h-auto" />
-              ) : isUddyKing ? (
-                <UddyKingIcon className="w-full h-auto" />
-              ) : isNNPC ? (
-                <NNPCIcon className="w-full h-auto" />
+            <div className="size-10 rounded-full shrink-0 bg-slate-100 overflow-hidden">
+              {station.image ? (
+                <img src={station.image} alt={station.name} className="w-full h-full object-cover" />
               ) : (
-                <Fuel className="size-5 text-slate-400" />
+                <div className="w-full h-full flex items-center justify-center">
+                  <Fuel className="size-5 text-slate-400" />
+                </div>
               )}
             </div>
             <h1 className="text-xl font-bold text-slate-900 truncate">{station.name}</h1>
