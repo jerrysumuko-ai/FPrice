@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   ArrowLeft, PlusCircle, ChevronRight, User, LogOut,
-  Moon, Sun, Share2, Pencil, Check, X,
+  Moon, Sun, Share2, Pencil, Check, X, MapPin, Loader2,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
@@ -30,6 +30,47 @@ export default function ProfilePage() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const [location, setLocation] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('fuelfinder_location');
+    if (savedLocation) setLocation(savedLocation);
+  }, []);
+
+  const fetchLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`
+          );
+          const data = await res.json();
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.county ||
+            '';
+          const state = data.address?.state || '';
+          const label = [city, state].filter(Boolean).join(', ');
+          if (label) {
+            setLocation(label);
+            localStorage.setItem('fuelfinder_location', label);
+          }
+        } catch {
+          // silently ignore
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      () => setLocationLoading(false),
+      { timeout: 8000 }
+    );
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -160,6 +201,18 @@ export default function ProfilePage() {
             </div>
           )}
           <p className="text-muted-foreground text-sm truncate max-w-xs">{subtitle}</p>
+          <button
+            onClick={fetchLocation}
+            disabled={locationLoading}
+            className="flex items-center justify-center gap-1.5 mx-auto mt-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+          >
+            {locationLoading ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <MapPin className="size-3.5" />
+            )}
+            <span>{location ?? 'Add location'}</span>
+          </button>
           {joinDate && (
             <p className="text-muted-foreground text-xs font-medium pt-0.5">
               Joined {joinDate}
