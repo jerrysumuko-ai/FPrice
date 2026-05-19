@@ -14,6 +14,8 @@ type Step = 'enter' | 'verify';
 function SignUpForm() {
   const [method, setMethod] = useState<Method>('email');
   const [step, setStep] = useState<Step>('enter');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -81,6 +83,13 @@ function SignUpForm() {
 
       if (!success) throw lastError ?? new Error('Verification failed');
 
+      // Persist display name from first + last name
+      const session = (await supabase.auth.getSession()).data.session;
+      if (session?.user && firstName.trim()) {
+        const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ');
+        localStorage.setItem(`displayName:${session.user.id}`, name);
+      }
+
       toast({ title: 'Welcome!', description: 'You are now signed in.' });
       window.location.assign(redirect);
     } catch (err: any) {
@@ -110,6 +119,42 @@ function SignUpForm() {
 
         {step === 'enter' ? (
           <div className="space-y-6 pt-2">
+            {/* First name + Last name */}
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="firstName" className="text-[14px] font-semibold text-slate-700 ml-1">
+                  First Name
+                </Label>
+                <div className="flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-5 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                  <input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    className="bg-transparent border-none outline-none flex-1 text-base text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="lastName" className="text-[14px] font-semibold text-slate-700 ml-1">
+                  Last Name
+                </Label>
+                <div className="flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-5 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                  <input
+                    id="lastName"
+                    type="text"
+                    placeholder="Doe"
+                    className="bg-transparent border-none outline-none flex-1 text-base text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
             <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
 
             <div className="flex bg-[#F1F3F4] rounded-2xl p-1">
