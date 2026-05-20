@@ -156,7 +156,7 @@ export default function ProfilePage() {
   const isDark = theme === 'dark';
 
   return (
-    <div className="bg-background min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
+    <div className="bg-[#F8F9FA] min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <button
           onClick={() => router.back()}
@@ -303,8 +303,8 @@ export default function ProfilePage() {
             Log Out
           </button>
         ) : (
-          <Link href="/signup" className="w-full mt-8">
-            <button className="w-full h-16 bg-foreground hover:opacity-90 text-background font-bold text-lg rounded-2xl transition-all flex items-center justify-center">
+          <Link href="/signup" className="w-full mt-8 block">
+            <button className="w-full h-12 bg-[#C2410C] hover:bg-[#A6330A] text-white font-bold text-base rounded-xl shadow-md shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center">
               Sign Up / Log In
             </button>
           </Link>
