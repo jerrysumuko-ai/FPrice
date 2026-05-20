@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, User } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -121,38 +121,44 @@ function SignUpForm() {
           <div className="space-y-6 pt-2">
             {/* First name + Last name */}
             <div className="flex flex-row gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="firstName" className="text-[13px] font-semibold text-slate-700 ml-1">
-                  First Name
-                </Label>
-                <div className="flex items-center bg-[#F1F3F4] rounded-xl h-11 px-4 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+              {/* First Name card */}
+              <label
+                htmlFor="firstName"
+                className="flex-1 bg-white border border-slate-200 rounded-2xl px-4 pt-3 pb-3 shadow-sm focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all cursor-text"
+              >
+                <span className="block text-[12px] font-semibold text-slate-500 mb-2">First Name</span>
+                <div className="flex items-center gap-2">
+                  <User className="size-4 text-slate-400 shrink-0" />
                   <input
                     id="firstName"
                     type="text"
                     placeholder="John"
-                    className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full min-w-0"
+                    className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium min-w-0"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
                   />
                 </div>
-              </div>
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="lastName" className="text-[13px] font-semibold text-slate-700 ml-1">
-                  Last Name
-                </Label>
-                <div className="flex items-center bg-[#F1F3F4] rounded-xl h-11 px-4 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+              </label>
+              {/* Last Name card */}
+              <label
+                htmlFor="lastName"
+                className="flex-1 bg-white border border-slate-200 rounded-2xl px-4 pt-3 pb-3 shadow-sm focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all cursor-text"
+              >
+                <span className="block text-[12px] font-semibold text-slate-500 mb-2">Last Name</span>
+                <div className="flex items-center gap-2">
+                  <User className="size-4 text-slate-400 shrink-0" />
                   <input
                     id="lastName"
                     type="text"
                     placeholder="Doe"
-                    className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full min-w-0"
+                    className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium min-w-0"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
                   />
                 </div>
-              </div>
+              </label>
             </div>
 
             <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
