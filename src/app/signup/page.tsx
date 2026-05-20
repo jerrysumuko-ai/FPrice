@@ -122,7 +122,7 @@ function SignUpForm() {
             {/* First name + Last name */}
             <div className="flex flex-row gap-3">
               {/* First Name */}
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 min-w-0 space-y-1">
                 <Label htmlFor="firstName" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                   First Name
                 </Label>
@@ -140,7 +140,7 @@ function SignUpForm() {
                 </div>
               </div>
               {/* Last Name */}
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 min-w-0 space-y-1">
                 <Label htmlFor="lastName" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                   Last Name
                 </Label>
