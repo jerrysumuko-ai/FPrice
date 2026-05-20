@@ -161,14 +161,17 @@ function SignUpForm() {
 
             <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
 
-            <div className="flex bg-[#F1F3F4] border border-slate-200 rounded-xl p-1">
+            <div className="relative flex bg-[#F1F3F4] border border-slate-200 rounded-xl p-1 h-11">
+              {/* sliding pill */}
+              <span
+                className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white border border-slate-200 rounded-lg shadow-sm transition-transform duration-300 ease-in-out"
+                style={{ transform: method === 'email' ? 'translateX(calc(100% + 4px))' : 'translateX(0)' }}
+              />
               <button
                 type="button"
                 onClick={() => setMethod('phone')}
-                className={`flex-1 h-10 rounded-lg text-[14px] font-bold transition-all ${
-                  method === 'phone'
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-400 hover:text-slate-600'
+                className={`relative z-10 flex-1 h-full rounded-lg text-[14px] font-bold transition-colors duration-200 ${
+                  method === 'phone' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
                 Phone
@@ -176,10 +179,8 @@ function SignUpForm() {
               <button
                 type="button"
                 onClick={() => setMethod('email')}
-                className={`flex-1 h-10 rounded-lg text-[14px] font-bold transition-all ${
-                  method === 'email'
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-400 hover:text-slate-600'
+                className={`relative z-10 flex-1 h-full rounded-lg text-[14px] font-bold transition-colors duration-200 ${
+                  method === 'email' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
                 Email
