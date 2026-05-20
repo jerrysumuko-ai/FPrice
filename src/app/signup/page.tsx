@@ -120,33 +120,33 @@ function SignUpForm() {
         {step === 'enter' ? (
           <div className="space-y-6 pt-2">
             {/* First name + Last name */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="firstName" className="text-[14px] font-semibold text-slate-700 ml-1">
+            <div className="flex flex-row gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="firstName" className="text-[13px] font-semibold text-slate-700 ml-1">
                   First Name
                 </Label>
-                <div className="flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-5 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                <div className="flex items-center bg-[#F1F3F4] rounded-xl h-11 px-4 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
                   <input
                     id="firstName"
                     type="text"
                     placeholder="John"
-                    className="bg-transparent border-none outline-none flex-1 text-base text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                    className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full min-w-0"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="lastName" className="text-[14px] font-semibold text-slate-700 ml-1">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="lastName" className="text-[13px] font-semibold text-slate-700 ml-1">
                   Last Name
                 </Label>
-                <div className="flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-5 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                <div className="flex items-center bg-[#F1F3F4] rounded-xl h-11 px-4 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
                   <input
                     id="lastName"
                     type="text"
                     placeholder="Doe"
-                    className="bg-transparent border-none outline-none flex-1 text-base text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                    className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full min-w-0"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
