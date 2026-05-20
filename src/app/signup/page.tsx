@@ -161,13 +161,13 @@ function SignUpForm() {
 
             <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
 
-            <div className="flex bg-[#F1F3F4] rounded-2xl p-1">
+            <div className="flex bg-[#F1F3F4] border border-slate-200 rounded-xl p-1">
               <button
                 type="button"
                 onClick={() => setMethod('phone')}
-                className={`flex-1 h-11 rounded-xl text-[14px] font-bold transition-all ${
+                className={`flex-1 h-10 rounded-lg text-[14px] font-bold transition-all ${
                   method === 'phone'
-                    ? 'bg-white text-slate-900 shadow-sm'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
@@ -176,9 +176,9 @@ function SignUpForm() {
               <button
                 type="button"
                 onClick={() => setMethod('email')}
-                className={`flex-1 h-11 rounded-xl text-[14px] font-bold transition-all ${
+                className={`flex-1 h-10 rounded-lg text-[14px] font-bold transition-all ${
                   method === 'email'
-                    ? 'bg-white text-slate-900 shadow-sm'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
@@ -230,7 +230,7 @@ function SignUpForm() {
               <Button
                 type="submit"
                 disabled={isSending}
-                className="w-full h-14 bg-[#C2410C] hover:bg-[#A6330A] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+                className="w-full h-12 bg-[#C2410C] hover:bg-[#A6330A] text-white text-base font-bold rounded-xl shadow-md shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {isSending ? 'Sending...' : (
                   <>
@@ -271,7 +271,7 @@ function SignUpForm() {
             <Button
               type="submit"
               disabled={isVerifying || !code.trim()}
-              className="w-full h-14 bg-[#C2410C] hover:bg-[#A6330A] text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full h-12 bg-[#C2410C] hover:bg-[#A6330A] text-white text-base font-bold rounded-xl shadow-md shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {isVerifying ? 'Verifying...' : 'Verify & Continue'}
             </Button>
