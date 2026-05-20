@@ -122,11 +122,11 @@ export default function Home() {
     <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8">
       {/* Simple Search Header */}
       <div className="p-4 pt-6 sticky top-0 bg-white z-10">
-        <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl px-4 h-14">
-          <Search className="text-slate-600 size-6 mr-3" />
+        <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
+          <Search className="text-slate-400 size-5 shrink-0" />
           <input
-            placeholder="Search"
-            className="bg-transparent border-none outline-none flex-1 text-xl text-slate-900 placeholder:text-slate-500 font-normal"
+            placeholder="Search stations..."
+            className="bg-transparent border-none outline-none flex-1 text-base text-slate-900 placeholder:text-slate-400 font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -138,8 +138,8 @@ export default function Home() {
         {recentStations.length > 0 && !search && (
           <div className="mt-4 animate-in fade-in duration-300">
             <h2 className="text-[11px] font-bold text-slate-500 tracking-wider mb-4 uppercase px-1">Recent</h2>
-            <div className="space-y-1">
-              {recentStations.map((station) => {
+            <div>
+              {recentStations.map((station, idx) => {
                 const isMobil = isMobilStation(station.name);
                 const isShafa = isShafaStation(station.name);
                 const isUddyKing = isUddyKingStation(station.name);
@@ -148,7 +148,7 @@ export default function Home() {
                   <Link
                     href={`/station/${station.id}`}
                     key={station.id}
-                    className="flex items-center gap-5 py-3 px-1 active:bg-slate-50 transition-colors group"
+                    className={`flex items-center gap-4 py-3 px-1 active:bg-slate-50 transition-colors${idx < recentStations.length - 1 ? ' border-b border-slate-200' : ''}`}
                   >
                     <div className="size-11 rounded-full shrink-0 bg-slate-100 overflow-hidden">
                       {station.image ? (
@@ -159,11 +159,9 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 py-1">
-                      <div className="text-[17px] font-medium text-slate-800 leading-none mb-1">
-                        {isMobil ? 'Mobil' : isShafa ? 'Shafa' : isUddyKing ? 'Uddy King' : isNNPC ? 'NNPC' : station.name.split(' ')[0]}
-                      </div>
-                      <Separator className="mt-4 bg-slate-100" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[15px] font-semibold text-slate-800 truncate">{station.name}</div>
+                      <div className="text-sm text-slate-400 truncate">{station.address}</div>
                     </div>
                   </Link>
                 );
@@ -191,7 +189,7 @@ export default function Home() {
                     <Link
                       href={`/station/${station.id}`}
                       key={station.id}
-                      className="flex items-center gap-5 py-4 px-1 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
+                      className="flex items-center gap-4 py-3 px-1 border-b border-slate-200 last:border-none active:bg-slate-50 transition-colors"
                     >
                       <div className="size-11 rounded-full shrink-0 bg-slate-100 overflow-hidden">
                         {station.image ? (
