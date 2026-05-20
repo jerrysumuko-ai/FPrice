@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, ArrowLeft, User } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, User, Mail, Phone, KeyRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -188,20 +188,19 @@ function SignUpForm() {
 
             <form onSubmit={handleSendCode} className="space-y-6">
               {method === 'phone' ? (
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-[14px] font-semibold text-slate-700 ml-1">
+                <div className="space-y-1">
+                  <Label htmlFor="phone" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                     Phone Number
                   </Label>
-                  <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
-                    <span className="text-lg font-bold text-slate-800 whitespace-nowrap leading-none flex items-center h-full">
-                      +234
-                    </span>
-                    <div className="w-[1px] h-6 bg-slate-300 mx-4 shrink-0" />
+                  <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                    <Phone className="size-4 text-slate-400 shrink-0" />
+                    <span className="text-sm font-bold text-slate-700 shrink-0">+234</span>
+                    <div className="w-[1px] h-4 bg-slate-300 shrink-0" />
                     <input
                       id="phone"
                       type="tel"
-                      placeholder="Enter your phone number"
-                      className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                      placeholder="Enter phone number"
+                      className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium min-w-0"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       required
@@ -209,16 +208,17 @@ function SignUpForm() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[14px] font-semibold text-slate-700 ml-1">
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                     Email Address
                   </Label>
-                  <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+                  <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                    <Mail className="size-4 text-slate-400 shrink-0" />
                     <input
                       id="email"
                       type="email"
                       placeholder="Enter your email"
-                      className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                      className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium min-w-0"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -243,17 +243,18 @@ function SignUpForm() {
           </div>
         ) : (
           <form onSubmit={handleVerify} className="space-y-6 pt-2">
-            <div className="space-y-2">
-              <Label htmlFor="code" className="text-[14px] font-semibold text-slate-700 ml-1">
+            <div className="space-y-1">
+              <Label htmlFor="code" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                 Verification Code
               </Label>
-              <div className="relative flex items-center bg-[#F1F3F4] rounded-2xl h-14 px-6 focus-within:ring-2 ring-orange-500/20 transition-all border border-transparent overflow-hidden">
+              <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                <KeyRound className="size-4 text-slate-400 shrink-0" />
                 <input
                   id="code"
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter your 6-digit code"
-                  className="bg-transparent border-none outline-none flex-1 text-lg text-slate-900 placeholder:text-slate-400 font-medium leading-none h-full"
+                  className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium min-w-0"
                   value={code}
                   onChange={(e) => setCode(e.target.value.trim())}
                   required
