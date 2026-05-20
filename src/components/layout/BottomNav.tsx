@@ -27,7 +27,7 @@ export function BottomNav() {
               className={cn(
                 "flex flex-col items-center gap-1 flex-1 py-2 px-3 rounded-xl transition-all",
                 isActive
-                  ? "bg-white border border-slate-200 shadow-sm text-[#C2410C]"
+                  ? "bg-white border border-slate-200 shadow-sm text-[#F4511E]"
                   : "text-slate-400 hover:text-slate-600"
               )}
             >

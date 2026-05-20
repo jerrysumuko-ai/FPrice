@@ -126,7 +126,7 @@ function SignUpForm() {
                 <Label htmlFor="firstName" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                   First Name
                 </Label>
-                <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
                   <User className="size-4 text-slate-400 shrink-0" />
                   <input
                     id="firstName"
@@ -144,7 +144,7 @@ function SignUpForm() {
                 <Label htmlFor="lastName" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                   Last Name
                 </Label>
-                <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
                   <User className="size-4 text-slate-400 shrink-0" />
                   <input
                     id="lastName"
@@ -193,7 +193,7 @@ function SignUpForm() {
                   <Label htmlFor="phone" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                     Phone Number
                   </Label>
-                  <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                  <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
                     <Phone className="size-4 text-slate-400 shrink-0" />
                     <span className="text-sm font-bold text-slate-700 shrink-0">+234</span>
                     <div className="w-[1px] h-4 bg-slate-300 shrink-0" />
@@ -213,7 +213,7 @@ function SignUpForm() {
                   <Label htmlFor="email" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                     Email Address
                   </Label>
-                  <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+                  <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
                     <Mail className="size-4 text-slate-400 shrink-0" />
                     <input
                       id="email"
@@ -231,7 +231,7 @@ function SignUpForm() {
               <Button
                 type="submit"
                 disabled={isSending}
-                className="w-full h-12 bg-[#C2410C] hover:bg-[#A6330A] text-white text-base font-bold rounded-xl shadow-md shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+                className="w-full h-12 bg-[#F4511E] hover:bg-[#D94315] text-white text-base font-bold rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {isSending ? 'Sending...' : (
                   <>
@@ -248,7 +248,7 @@ function SignUpForm() {
               <Label htmlFor="code" className="text-[13px] font-semibold text-slate-500 ml-1 block">
                 Verification Code
               </Label>
-              <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
+              <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
                 <KeyRound className="size-4 text-slate-400 shrink-0" />
                 <input
                   id="code"
@@ -272,7 +272,7 @@ function SignUpForm() {
             <Button
               type="submit"
               disabled={isVerifying || !code.trim()}
-              className="w-full h-12 bg-[#C2410C] hover:bg-[#A6330A] text-white text-base font-bold rounded-xl shadow-md shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full h-12 bg-[#F4511E] hover:bg-[#D94315] text-white text-base font-bold rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {isVerifying ? 'Verifying...' : 'Verify & Continue'}
             </Button>

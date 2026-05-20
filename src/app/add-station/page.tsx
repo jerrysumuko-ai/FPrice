@@ -306,7 +306,7 @@ export default function AddStationPage() {
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
 
                 {photoPreview ? (
-                  <div className="relative rounded-2xl overflow-hidden border-2 border-[#D9451B]">
+                  <div className="relative rounded-2xl overflow-hidden border-2 border-[#F4511E]">
                     <div className="relative w-full h-52">
                       <Image src={photoPreview} alt="Station photo" fill className="object-cover" />
                     </div>
@@ -349,7 +349,7 @@ export default function AddStationPage() {
               <div className="pt-2 pb-12">
                 <Button
                   type="submit"
-                  className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
+                  className="w-full h-16 bg-[#F4511E] hover:bg-[#D94315] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
                 >
                   Continue
                 </Button>
@@ -369,14 +369,14 @@ export default function AddStationPage() {
             {/* Stepper */}
             <div className="flex items-center justify-center py-4">
               <div className="flex flex-col items-center">
-                <div className="size-10 rounded-full bg-[#D9451B] flex items-center justify-center text-white">
+                <div className="size-10 rounded-full bg-[#F4511E] flex items-center justify-center text-white">
                   <Check className="size-6" />
                 </div>
                 <span className="text-[13px] font-bold text-slate-700 mt-2">Details</span>
               </div>
-              <div className="w-24 h-[2px] bg-[#D9451B] -mt-6 mx-2" />
+              <div className="w-24 h-[2px] bg-[#F4511E] -mt-6 mx-2" />
               <div className="flex flex-col items-center">
-                <div className="size-10 rounded-full border-2 border-[#D9451B] flex items-center justify-center text-[#D9451B] font-bold">
+                <div className="size-10 rounded-full border-2 border-[#F4511E] flex items-center justify-center text-[#F4511E] font-bold">
                   2
                 </div>
                 <span className="text-[13px] font-bold text-slate-700 mt-2">Prices</span>
@@ -432,7 +432,7 @@ export default function AddStationPage() {
                   id="authorized"
                   checked={isAuthorized}
                   onCheckedChange={(v) => setIsAuthorized(v as boolean)}
-                  className="size-6 border-slate-300 data-[state=checked]:bg-[#D9451B] data-[state=checked]:border-[#D9451B]"
+                  className="size-6 border-slate-300 data-[state=checked]:bg-[#F4511E] data-[state=checked]:border-[#F4511E]"
                 />
                 <label htmlFor="authorized" className="text-sm font-medium text-slate-600 cursor-pointer leading-tight">
                   I confirm I am authorized to represent this station
@@ -443,7 +443,7 @@ export default function AddStationPage() {
                 <Button
                   onClick={handleFinish}
                   disabled={isSubmitting}
-                  className="w-full h-16 bg-[#D9451B] hover:bg-[#C23C16] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-60"
+                  className="w-full h-16 bg-[#F4511E] hover:bg-[#D94315] text-white text-xl font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-60"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" /> Submitting…</span>

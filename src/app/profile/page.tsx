@@ -233,7 +233,7 @@ export default function ProfilePage() {
 
         <button
           onClick={handleAddStation}
-          className="w-full h-16 bg-[#F24E1E] hover:bg-[#D9451B] active:scale-[0.98] transition-all text-white rounded-2xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg shadow-orange-100"
+          className="w-full h-16 bg-[#F4511E] hover:bg-[#F4511E] active:scale-[0.98] transition-all text-white rounded-2xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg shadow-[#F4511E]/15"
         >
           <PlusCircle className="size-7" />
           Add Station
@@ -245,8 +245,8 @@ export default function ProfilePage() {
             className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="size-9 rounded-full bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center">
-                <Share2 className="size-4 text-[#F24E1E]" />
+              <div className="size-9 rounded-full bg-[#F4511E]/10 dark:bg-[#F4511E]/15 flex items-center justify-center">
+                <Share2 className="size-4 text-[#F4511E]" />
               </div>
               <span className="text-base text-foreground font-semibold">Invite a Friend</span>
             </div>
@@ -304,7 +304,7 @@ export default function ProfilePage() {
           </button>
         ) : (
           <Link href="/signup" className="w-full mt-8 block">
-            <button className="w-full h-12 bg-[#C2410C] hover:bg-[#A6330A] text-white font-bold text-base rounded-xl shadow-md shadow-orange-100 transition-all active:scale-[0.98] flex items-center justify-center">
+            <button className="w-full h-12 bg-[#F4511E] hover:bg-[#D94315] text-white font-bold text-base rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] flex items-center justify-center">
               Sign Up / Log In
             </button>
           </Link>
