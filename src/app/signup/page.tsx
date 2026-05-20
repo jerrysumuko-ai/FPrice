@@ -121,13 +121,12 @@ function SignUpForm() {
           <div className="space-y-6 pt-2">
             {/* First name + Last name */}
             <div className="flex flex-row gap-3">
-              {/* First Name card */}
-              <label
-                htmlFor="firstName"
-                className="flex-1 bg-white border border-slate-200 rounded-2xl px-4 pt-3 pb-3 shadow-sm focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all cursor-text"
-              >
-                <span className="block text-[12px] font-semibold text-slate-500 mb-2">First Name</span>
-                <div className="flex items-center gap-2">
+              {/* First Name */}
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="firstName" className="text-[13px] font-semibold text-slate-500 ml-1 block">
+                  First Name
+                </Label>
+                <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
                   <User className="size-4 text-slate-400 shrink-0" />
                   <input
                     id="firstName"
@@ -139,14 +138,13 @@ function SignUpForm() {
                     required
                   />
                 </div>
-              </label>
-              {/* Last Name card */}
-              <label
-                htmlFor="lastName"
-                className="flex-1 bg-white border border-slate-200 rounded-2xl px-4 pt-3 pb-3 shadow-sm focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all cursor-text"
-              >
-                <span className="block text-[12px] font-semibold text-slate-500 mb-2">Last Name</span>
-                <div className="flex items-center gap-2">
+              </div>
+              {/* Last Name */}
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="lastName" className="text-[13px] font-semibold text-slate-500 ml-1 block">
+                  Last Name
+                </Label>
+                <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all">
                   <User className="size-4 text-slate-400 shrink-0" />
                   <input
                     id="lastName"
@@ -158,7 +156,7 @@ function SignUpForm() {
                     required
                   />
                 </div>
-              </label>
+              </div>
             </div>
 
             <h2 className="text-[18px] font-bold text-[#0F172A]">Verify with One-Time Code</h2>
