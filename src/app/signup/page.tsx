@@ -104,7 +104,7 @@ function SignUpForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-4 py-8 -mx-4 -mt-4 md:-mt-8">
+    <div className="h-screen overflow-hidden bg-[#F8F9FA] flex flex-col items-center justify-center px-4 -mx-4 -mt-4 md:-mt-8">
       <div className="w-full max-w-[420px] bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500">
         <div className="space-y-1">
           <h1 className="text-[32px] font-bold text-[#1E293B] tracking-tight leading-tight">
