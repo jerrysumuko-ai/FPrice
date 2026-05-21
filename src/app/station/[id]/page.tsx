@@ -2,11 +2,10 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { FuelStation } from '@/lib/types';
-import { fetchStationById, submitFeedback, submitPriceReport } from '@/lib/supabase-queries';
+import { fetchStationById, submitPriceReport } from '@/lib/supabase-queries';
 import { ArrowLeft, Fuel, AlertTriangle, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -91,14 +90,12 @@ export default function StationDetailPage() {
   const [station, setStation] = useState<FuelStation | null>(null);
   const [loading, setLoading] = useState(true);
   const [calcAmount, setCalcAmount] = useState('1000');
-  const [feedback, setFeedback] = useState('');
   const [selectedFuel, setSelectedFuel] = useState<'petrol' | 'diesel'>('petrol');
 
   const [newPetrolPrice, setNewPetrolPrice] = useState('');
   const [newDieselPrice, setNewDieselPrice] = useState('');
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isFavourite, setIsFavourite] = useState(false);
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
@@ -140,31 +137,6 @@ export default function StationDetailPage() {
 
   const currentPrice = selectedFuel === 'petrol' ? station.petrolPrice : station.dieselPrice;
   const liters = (parseFloat(calcAmount) || 0) / currentPrice;
-
-  const handleFeedbackSubmit = async () => {
-    if (!feedback.trim()) return;
-    setIsSubmittingFeedback(true);
-    try {
-      await submitFeedback({
-        stationId: station.id,
-        subject: `Feedback for ${station.name}`,
-        message: feedback,
-      });
-      toast({
-        title: "Feedback Submitted",
-        description: "Thank you for sharing your experience!",
-      });
-      setFeedback('');
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to submit",
-        description: err?.message ?? "Please try again later.",
-      });
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
-  };
 
   const toggleFavourite = () => {
     const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
@@ -305,26 +277,9 @@ export default function StationDetailPage() {
         </div>
       </div>
 
-      <div className="h-4" />
+      <div className="h-2" />
 
-      {/* Feedback */}
-      <div className="mx-4 bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
-        <h2 className="text-base font-bold text-slate-800">Leave Feedback</h2>
-        <div className="bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
-          <Textarea
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Share your experience at this station..."
-            className="border-none focus-visible:ring-0 min-h-[100px] p-0 resize-none text-sm placeholder:text-slate-400 bg-transparent"
-          />
-        </div>
-        <Button
-          onClick={handleFeedbackSubmit}
-          disabled={isSubmittingFeedback}
-          className="w-full h-12 bg-[#F4511E] hover:bg-[#D94315] text-white font-bold text-base rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] disabled:opacity-60"
-        >
-          {isSubmittingFeedback ? 'Submitting...' : 'Submit Feedback'}
-        </Button>
+      <div className="mx-4 mb-4">
         <div className="text-center">
           <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
             <DialogTrigger asChild>
@@ -380,3 +335,4 @@ export default function StationDetailPage() {
     </div>
   );
 }
+

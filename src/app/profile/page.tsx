@@ -3,13 +3,16 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   ArrowLeft, PlusCircle, ChevronRight, User, LogOut,
-  Moon, Sun, Share2, Pencil, Check, X, MapPin, Loader2,
+  Moon, Sun, Share2, Pencil, Check, X, MapPin, Loader2, MessageSquare,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { useTheme } from '@/hooks/use-theme';
+import { submitFeedback } from '@/lib/supabase-queries';
+import { useToast } from '@/hooks/use-toast';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 function formatJoinDate(dateStr: string | undefined) {
@@ -22,9 +25,12 @@ export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClient();
   const { theme, setTheme, mounted } = useTheme();
+  const { toast } = useToast();
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [appFeedback, setAppFeedback] = useState('');
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   const [displayName, setDisplayName] = useState('');
   const [editingName, setEditingName] = useState(false);
@@ -135,6 +141,24 @@ export default function ProfilePage() {
   const cancelEdit = () => {
     setEditingName(false);
     setNameInput('');
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!appFeedback.trim()) return;
+    setIsSubmittingFeedback(true);
+    try {
+      await submitFeedback({
+        stationId: '',
+        subject: 'App Feedback',
+        message: appFeedback,
+      });
+      toast({ title: "Feedback Sent", description: "Thank you for helping us improve the app!" });
+      setAppFeedback('');
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to send", description: err?.message ?? "Please try again." });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   const handleShare = async () => {
@@ -291,6 +315,32 @@ export default function ProfilePage() {
               <span className="text-base text-foreground font-semibold">Settings</span>
             </div>
             <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
+          </button>
+        </div>
+
+        {/* App Feedback */}
+        <div className="w-full mt-6 bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded-full bg-[#F4511E]/10 flex items-center justify-center shrink-0">
+              <MessageSquare className="size-4 text-[#F4511E]" />
+            </div>
+            <h3 className="text-base font-bold text-foreground">Send Feedback</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">Have a suggestion or spotted an issue? Let us know.</p>
+          <div className="bg-[#F1F3F4] dark:bg-muted border border-border rounded-xl px-3 py-2.5 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
+            <Textarea
+              value={appFeedback}
+              onChange={(e) => setAppFeedback(e.target.value)}
+              placeholder="Tell us what you think..."
+              className="border-none focus-visible:ring-0 min-h-[90px] p-0 resize-none text-sm placeholder:text-muted-foreground bg-transparent"
+            />
+          </div>
+          <button
+            onClick={handleFeedbackSubmit}
+            disabled={isSubmittingFeedback || !appFeedback.trim()}
+            className="w-full h-11 bg-[#F4511E] hover:bg-[#D94315] text-white font-bold text-sm rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {isSubmittingFeedback ? 'Sending...' : 'Send Feedback'}
           </button>
         </div>
 
