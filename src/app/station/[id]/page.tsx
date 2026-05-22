@@ -2,11 +2,10 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { FuelStation } from '@/lib/types';
-import { fetchStationById, submitFeedback, submitPriceReport } from '@/lib/supabase-queries';
+import { fetchStationById, submitPriceReport } from '@/lib/supabase-queries';
 import { ArrowLeft, Fuel, AlertTriangle, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -91,14 +90,12 @@ export default function StationDetailPage() {
   const [station, setStation] = useState<FuelStation | null>(null);
   const [loading, setLoading] = useState(true);
   const [calcAmount, setCalcAmount] = useState('1000');
-  const [feedback, setFeedback] = useState('');
   const [selectedFuel, setSelectedFuel] = useState<'petrol' | 'diesel'>('petrol');
 
   const [newPetrolPrice, setNewPetrolPrice] = useState('');
   const [newDieselPrice, setNewDieselPrice] = useState('');
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isFavourite, setIsFavourite] = useState(false);
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
@@ -106,17 +103,24 @@ export default function StationDetailPage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const s = await fetchStationById(stationId);
-      if (cancelled) return;
-      setStation(s);
-      setLoading(false);
+      try {
+        const s = await fetchStationById(stationId);
+        if (cancelled) return;
+        setStation(s);
 
-      const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
-      const newRecent = [stationId, ...recent.filter((i: string) => i !== stationId)].slice(0, 3);
-      localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
+        if (s) {
+          const recent = JSON.parse(localStorage.getItem('fuel_finder_recent') || '[]');
+          const newRecent = [stationId, ...recent.filter((i: string) => i !== stationId)].slice(0, 3);
+          localStorage.setItem('fuel_finder_recent', JSON.stringify(newRecent));
 
-      const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
-      setIsFavourite(favs.includes(stationId));
+          const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
+          setIsFavourite(favs.includes(stationId));
+        }
+      } catch (err) {
+        console.error('Failed to load station:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
@@ -133,31 +137,6 @@ export default function StationDetailPage() {
 
   const currentPrice = selectedFuel === 'petrol' ? station.petrolPrice : station.dieselPrice;
   const liters = (parseFloat(calcAmount) || 0) / currentPrice;
-
-  const handleFeedbackSubmit = async () => {
-    if (!feedback.trim()) return;
-    setIsSubmittingFeedback(true);
-    try {
-      await submitFeedback({
-        stationId: station.id,
-        subject: `Feedback for ${station.name}`,
-        message: feedback,
-      });
-      toast({
-        title: "Feedback Submitted",
-        description: "Thank you for sharing your experience!",
-      });
-      setFeedback('');
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to submit",
-        description: err?.message ?? "Please try again later.",
-      });
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
-  };
 
   const toggleFavourite = () => {
     const favs = JSON.parse(localStorage.getItem('fuel_finder_favs') || '[]');
@@ -204,115 +183,103 @@ export default function StationDetailPage() {
   const isUddyKing = station.name.toLowerCase().includes('uddy king');
   const isNNPC = station.name.toLowerCase().includes('nnpc');
 
+  const formatLitres = (val: number) => {
+    if (isNaN(val) || val === 0) return '0 litres';
+    return val % 1 === 0 ? `${val.toFixed(0)} litres` : `${val.toFixed(2)} litres`;
+  };
+
   return (
-    <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
-      <header className="flex items-center justify-between p-4 border-b">
+    <div className="bg-[#F8F9FA] min-h-screen -mx-4 -mt-4 md:-mt-8 pb-20">
+      <header className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
         <div className="flex items-center min-w-0">
-          <button onClick={() => router.back()} className="mr-4 shrink-0">
+          <button onClick={() => router.back()} className="mr-4 shrink-0 p-1 rounded-full hover:bg-slate-100 transition-colors">
             <ArrowLeft className="size-6 text-slate-800" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <div className="size-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100 overflow-hidden p-1">
-              {isMobil ? (
-                <MobilIcon className="w-full h-auto" />
-              ) : isShafa ? (
-                <ShafaIcon className="w-full h-auto" />
-              ) : isUddyKing ? (
-                <UddyKingIcon className="w-full h-auto" />
-              ) : isNNPC ? (
-                <NNPCIcon className="w-full h-auto" />
+            <div className="size-10 rounded-full shrink-0 bg-slate-100 overflow-hidden">
+              {station.image ? (
+                <img src={station.image} alt={station.name} className="w-full h-full object-cover" />
               ) : (
-                <Fuel className="size-5 text-slate-400" />
+                <div className="w-full h-full flex items-center justify-center">
+                  <Fuel className="size-5 text-slate-400" />
+                </div>
               )}
             </div>
             <h1 className="text-xl font-bold text-slate-900 truncate">{station.name}</h1>
           </div>
         </div>
-        <button
-          onClick={toggleFavourite}
-          className="p-2 active:scale-90 transition-transform"
-        >
+        <button onClick={toggleFavourite} className="p-2 active:scale-90 transition-transform">
           <Star className={cn("size-7 transition-colors", isFavourite ? "fill-yellow-400 text-yellow-400" : "text-slate-300")} />
         </button>
       </header>
 
-      <div className="bg-slate-50 px-4 py-2 text-right border-b">
-        <span className="text-xs text-slate-500">Last updated: {station.lastUpdated}</span>
+      <div className="bg-white px-4 py-2 text-right border-b border-slate-100">
+        <span className="text-xs text-slate-400">Last updated: {(() => { try { const d = new Date(station.lastUpdated); return isNaN(d.getTime()) ? station.lastUpdated : d.toLocaleString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return station.lastUpdated; } })()}</span>
       </div>
 
-      <div className="p-4 grid grid-cols-2 gap-4">
+      {/* Fuel price cards */}
+      <div className="p-4 grid grid-cols-2 gap-3">
         <button
           onClick={() => setSelectedFuel('petrol')}
           className={cn(
-            "bg-[#109D3E] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
-            selectedFuel === 'petrol' ? "ring-4 ring-blue-500 ring-offset-2 scale-[1.02]" : "opacity-80 hover:opacity-100"
+            "bg-[#109D3E] text-white p-4 rounded-xl flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
+            selectedFuel === 'petrol' ? "ring-4 ring-[#F4511E] ring-offset-2 scale-[1.02]" : "opacity-80 hover:opacity-100"
           )}
         >
-          <div className="text-lg font-bold">Petrol</div>
+          <div className="text-base font-bold">Petrol</div>
           <div className="text-2xl font-black">₦{station.petrolPrice}/L</div>
           {selectedFuel === 'petrol' && (
-             <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-1 shadow-md">
-                <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-             </div>
+            <div className="absolute -top-2 -right-2 bg-[#F4511E] rounded-full p-1 shadow-md">
+              <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
           )}
         </button>
         <button
           onClick={() => setSelectedFuel('diesel')}
           className={cn(
-            "bg-[#3B4453] text-white p-4 rounded-lg flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
-            selectedFuel === 'diesel' ? "ring-4 ring-blue-500 ring-offset-2 scale-[1.02]" : "opacity-80 hover:opacity-100"
+            "bg-[#3B4453] text-white p-4 rounded-xl flex flex-col items-center justify-center space-y-1 shadow-sm transition-all relative",
+            selectedFuel === 'diesel' ? "ring-4 ring-[#F4511E] ring-offset-2 scale-[1.02]" : "opacity-80 hover:opacity-100"
           )}
         >
-          <div className="text-lg font-bold">Diesel</div>
+          <div className="text-base font-bold">Diesel</div>
           <div className="text-2xl font-black">₦{station.dieselPrice}/L</div>
           {selectedFuel === 'diesel' && (
-             <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-1 shadow-md">
-                <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-             </div>
+            <div className="absolute -top-2 -right-2 bg-[#F4511E] rounded-full p-1 shadow-md">
+              <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
           )}
         </button>
       </div>
 
-      <div className="h-[1px] w-full bg-slate-100" />
-
-      <div className="p-4 space-y-4">
-        <h2 className="text-lg font-bold text-slate-800">Fuel Calculator</h2>
-        <div className="space-y-3">
-          <Input
+      {/* Fuel Calculator */}
+      <div className="mx-4 bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+        <h2 className="text-base font-bold text-slate-800">Fuel Calculator</h2>
+        <div className="flex items-center bg-[#F1F3F4] border border-slate-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
+          <span className="text-sm font-bold text-slate-500 shrink-0">₦</span>
+          <input
             value={calcAmount}
             onChange={(e) => setCalcAmount(e.target.value)}
-            placeholder="Enter amount you want to spend (₦)"
-            className="h-12 border-slate-200"
+            placeholder="Amount to spend"
+            className="bg-transparent border-none outline-none flex-1 text-sm text-slate-900 placeholder:text-slate-400 font-medium min-w-0"
             type="number"
           />
-          <div className="bg-[#F1F3F4] p-4 rounded-lg text-[17px] font-medium text-slate-900">
-            ₦{Number(calcAmount || 0).toLocaleString('en-US')} → {isNaN(liters) ? '0.00' : liters.toFixed(2)}L {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}
-          </div>
+        </div>
+        <div className="bg-[#F1F3F4] border border-slate-200 rounded-xl px-4 py-3">
+          <p className="text-xs text-slate-400 mb-0.5">You will get</p>
+          <p className="text-lg font-bold text-slate-900">
+            {formatLitres(liters)} <span className="text-slate-500 font-medium text-sm">of {selectedFuel === 'petrol' ? 'Petrol' : 'Diesel'}</span>
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">for ₦{Number(calcAmount || 0).toLocaleString('en-NG')}</p>
         </div>
       </div>
 
-      <div className="h-[1px] w-full bg-slate-100" />
+      <div className="h-2" />
 
-      <div className="p-4 space-y-4">
-        <div className="relative border border-slate-200 rounded-xl p-3 focus-within:ring-2 ring-primary/20">
-          <Textarea
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Leave your feedback or experience..."
-            className="border-none focus-visible:ring-0 min-h-[120px] p-0 resize-none text-[15px] placeholder:text-slate-400"
-          />
-        </div>
-        <Button
-          onClick={handleFeedbackSubmit}
-          disabled={isSubmittingFeedback}
-          className="w-full h-12 bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-lg rounded-xl"
-        >
-          {isSubmittingFeedback ? 'Submitting...' : 'Submit'}
-        </Button>
+      <div className="mx-4 mb-4">
         <div className="text-center">
           <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
             <DialogTrigger asChild>
@@ -368,3 +335,4 @@ export default function StationDetailPage() {
     </div>
   );
 }
+

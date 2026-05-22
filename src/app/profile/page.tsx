@@ -1,118 +1,364 @@
 "use client"
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Pencil, PlusCircle, ChevronRight, User } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import {
+  ArrowLeft, PlusCircle, ChevronRight, User, LogOut,
+  Moon, Sun, Share2, Pencil, Check, X, MapPin, Loader2, MessageSquare,
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import { useTheme } from '@/hooks/use-theme';
+import { submitFeedback } from '@/lib/supabase-queries';
+import { useToast } from '@/hooks/use-toast';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+function formatJoinDate(dateStr: string | undefined) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClient();
-  const [userEmail, setUserEmail] = useState('');
+  const { theme, setTheme, mounted } = useTheme();
+  const { toast } = useToast();
+
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [appFeedback, setAppFeedback] = useState('');
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+  const [displayName, setDisplayName] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const [location, setLocation] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const savedLocation = localStorage.getItem('fuelfinder_location');
+    if (savedLocation) setLocation(savedLocation);
+  }, []);
 
-      if (!session) {
-        router.replace('/signup');
-        return;
+  const fetchLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocationLoading(true);
+
+    const resolveLabel = async (latitude: number, longitude: number) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+        );
+        const data = await res.json();
+        const addr = data.address ?? {};
+        const district =
+          addr.city_district || addr.county || addr.suburb || addr.neighbourhood || '';
+        const city = addr.city || addr.town || addr.village || '';
+        const label = [district, city].filter(Boolean).join(', ');
+        if (label) {
+          setLocation(label);
+          localStorage.setItem('fuelfinder_location', label);
+        }
+      } catch {
+        // silently ignore
+      } finally {
+        setLocationLoading(false);
       }
-
-      setUserEmail(session.user.email ?? '');
-      setLoading(false);
     };
 
-    getSession();
+    const onError = () => {
+      // High-accuracy failed — retry with network-based location
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => resolveLabel(coords.latitude, coords.longitude),
+        () => setLocationLoading(false),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.replace('/signup');
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolveLabel(coords.latitude, coords.longitude),
+      onError,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const u = session?.user ?? null;
+      setUser(u);
+      setLoading(false);
+
+      if (u) {
+        const saved = localStorage.getItem(`displayName:${u.id}`);
+        if (saved) {
+          setDisplayName(saved);
+        } else {
+          const derived = u.email
+            ? u.email.split('@')[0].charAt(0).toUpperCase() + u.email.split('@')[0].slice(1)
+            : u.phone ?? 'User';
+          setDisplayName(derived);
+        }
       }
     });
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.replace('/signup');
+    setUser(null);
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 flex items-center justify-center">
-        <div className="text-slate-400 text-lg font-medium">Loading...</div>
-      </div>
-    );
-  }
+  const handleAddStation = () => {
+    if (!user) router.push('/signup?redirect=/add-station');
+    else router.push('/add-station');
+  };
 
-  const displayName = userEmail.split('@')[0];
-  const capitalized = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+  const startEditing = () => {
+    setNameInput(displayName);
+    setEditingName(true);
+    setTimeout(() => nameInputRef.current?.focus(), 50);
+  };
+
+  const saveName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && user) {
+      setDisplayName(trimmed);
+      localStorage.setItem(`displayName:${user.id}`, trimmed);
+    }
+    setEditingName(false);
+  };
+
+  const cancelEdit = () => {
+    setEditingName(false);
+    setNameInput('');
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!appFeedback.trim()) return;
+    setIsSubmittingFeedback(true);
+    try {
+      await submitFeedback({
+        stationId: '',
+        subject: 'App Feedback',
+        message: appFeedback,
+      });
+      toast({ title: "Feedback Sent", description: "Thank you for helping us improve the app!" });
+      setAppFeedback('');
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to send", description: err?.message ?? "Please try again." });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.origin;
+    const text = `Find real-time fuel prices in Calabar with FuelFinder! ${url}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Calabar FuelFinder', text, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+    }
+  };
+
+  if (loading) return null;
+
+  const subtitle = user?.email ?? user?.phone ?? 'Calabar FuelFinder';
+  const joinDate = formatJoinDate(user?.created_at);
+  const isDark = theme === 'dark';
 
   return (
-    <div className="bg-white min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
-      {/* Header with Back button and Edit */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-        <button 
-          onClick={() => router.back()} 
-          className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors active:scale-95"
+    <div className="bg-[#F8F9FA] min-h-screen -mx-4 -mt-4 md:-mt-8 flex flex-col pb-24">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <button
+          onClick={() => router.back()}
+          className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors active:scale-95"
         >
-          <ArrowLeft className="size-6 text-slate-800" />
+          <ArrowLeft className="size-6 text-foreground" />
         </button>
-        <h1 className="text-xl font-bold text-slate-900">Profile</h1>
-        <button className="p-2 -mr-2 hover:bg-slate-50 rounded-full transition-colors border border-slate-200 shadow-sm active:scale-95">
-          <Pencil className="size-5 text-slate-800" />
-        </button>
+        <h1 className="text-xl font-bold text-foreground">Profile</h1>
+        <div className="w-10" />
       </header>
 
       <div className="px-6 py-10 flex flex-col items-center">
-        {/* Profile Avatar/Logo Section */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="size-36 rounded-full bg-slate-100 flex items-center justify-center mb-3 overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-200">
-             <User className="size-24 text-slate-300" />
+        <div className="flex flex-col items-center mb-6">
+          <div className="size-36 rounded-full bg-muted flex items-center justify-center mb-3 overflow-hidden border-4 border-background shadow-md ring-1 ring-border">
+            <User className="size-24 text-muted-foreground" />
           </div>
-          <span className="text-slate-400 text-sm font-medium">Profile logo</span>
+          {user && (
+            <span className="text-muted-foreground text-sm font-medium">Member</span>
+          )}
         </div>
 
-        {/* User Identity Section */}
-        <div className="text-center space-y-1 mb-8">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">{capitalized}</h2>
-          <p className="text-slate-400">{userEmail}</p>
+        <div className="text-center space-y-1 mb-2 w-full max-w-xs">
+          {editingName ? (
+            <div className="flex items-center gap-2 justify-center">
+              <input
+                ref={nameInputRef}
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') cancelEdit(); }}
+                className="text-2xl font-black text-foreground tracking-tight bg-muted rounded-xl px-3 py-1 outline-none border-2 border-primary w-full text-center"
+                maxLength={32}
+              />
+              <button onClick={saveName} className="p-1.5 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors shrink-0">
+                <Check className="size-4" />
+              </button>
+              <button onClick={cancelEdit} className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors shrink-0">
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-3xl font-black text-foreground tracking-tight">{displayName}</h2>
+              {user && (
+                <button
+                  onClick={startEditing}
+                  className="p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  <Pencil className="size-4" />
+                </button>
+              )}
+            </div>
+          )}
+          {user && <p className="text-muted-foreground text-sm truncate max-w-xs">{subtitle}</p>}
+          <button
+            onClick={fetchLocation}
+            disabled={locationLoading}
+            className="flex items-center justify-center gap-1.5 mx-auto mt-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+          >
+            {locationLoading ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <MapPin className="size-3.5" />
+            )}
+            <span>{location ?? 'Add location'}</span>
+          </button>
+          {joinDate && (
+            <p className="text-muted-foreground text-xs font-medium pt-0.5">
+              Joined {joinDate}
+            </p>
+          )}
         </div>
 
-        <Separator className="mb-10" />
+        <Separator className="my-8" />
 
-        {/* Primary Action Button */}
-        <Link href="/add-station" className="w-full">
-          <button className="w-full h-16 bg-[#F24E1E] hover:bg-[#D9451B] active:scale-[0.98] transition-all text-white rounded-2xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg shadow-orange-100">
-            <PlusCircle className="size-7" />
-            Add Station
-          </button>
-        </Link>
-
-        {/* Menu Navigation */}
-        <div className="w-full mt-10 space-y-0">
-          <button className="w-full flex items-center justify-between py-6 border-b border-slate-100 group text-left active:bg-slate-50/50 transition-colors">
-            <span className="text-lg text-slate-600 font-medium group-hover:text-slate-900">Help & Support</span>
-            <ChevronRight className="size-5 text-slate-400 group-active:translate-x-1 transition-transform" />
-          </button>
-          <button className="w-full flex items-center justify-between py-6 border-b border-slate-100 group text-left active:bg-slate-50/50 transition-colors">
-            <span className="text-lg text-slate-600 font-medium group-hover:text-slate-900">Settings</span>
-            <ChevronRight className="size-5 text-slate-400 group-active:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* Centered Logout Button */}
-        <button 
-          onClick={handleLogout}
-          className="w-full h-16 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 active:scale-[0.99] text-slate-800 font-bold text-lg rounded-2xl mt-12 transition-all"
+        <button
+          onClick={handleAddStation}
+          className="w-full h-16 bg-[#F4511E] hover:bg-[#F4511E] active:scale-[0.98] transition-all text-white rounded-2xl flex items-center justify-center gap-3 text-xl font-bold shadow-lg shadow-[#F4511E]/15"
         >
-          Logout
+          <PlusCircle className="size-7" />
+          Add Station
         </button>
+
+        <div className="w-full mt-6 space-y-0 rounded-2xl overflow-hidden border border-border">
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-[#F4511E]/10 dark:bg-[#F4511E]/15 flex items-center justify-center">
+                <Share2 className="size-4 text-[#F4511E]" />
+              </div>
+              <span className="text-base text-foreground font-semibold">Invite a Friend</span>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
+          </button>
+
+          <button
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                {mounted && isDark
+                  ? <Sun className="size-4 text-amber-500" />
+                  : <Moon className="size-4 text-slate-600 dark:text-slate-300" />
+                }
+              </div>
+              <span className="text-base text-foreground font-semibold">
+                {mounted && isDark ? 'Light Mode' : 'Dark Mode'}
+              </span>
+            </div>
+            <div className={`w-12 h-6 rounded-full transition-colors duration-300 flex items-center px-1 ${mounted && isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+              <div className={`size-4 rounded-full bg-white shadow transition-transform duration-300 ${mounted && isDark ? 'translate-x-6' : 'translate-x-0'}`} />
+            </div>
+          </button>
+
+          <button className="w-full flex items-center justify-between px-5 py-5 bg-card border-b border-border group text-left active:bg-muted/60 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
+                <ChevronRight className="size-4 text-blue-500" />
+              </div>
+              <span className="text-base text-foreground font-semibold">Help & Support</span>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
+          </button>
+
+          <button className="w-full flex items-center justify-between px-5 py-5 bg-card group text-left active:bg-muted/60 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <ChevronRight className="size-4 text-slate-500" />
+              </div>
+              <span className="text-base text-foreground font-semibold">Settings</span>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground group-active:translate-x-1 transition-transform" />
+          </button>
+        </div>
+
+        {/* App Feedback */}
+        <div className="w-full mt-6 bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded-full bg-[#F4511E]/10 flex items-center justify-center shrink-0">
+              <MessageSquare className="size-4 text-[#F4511E]" />
+            </div>
+            <h3 className="text-base font-bold text-foreground">Send Feedback</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">Have a suggestion or spotted an issue? Let us know.</p>
+          <div className="bg-[#F1F3F4] dark:bg-muted border border-border rounded-xl px-3 py-2.5 focus-within:ring-2 focus-within:ring-[#F4511E]/20 focus-within:border-[#F4511E]/40 transition-all">
+            <Textarea
+              value={appFeedback}
+              onChange={(e) => setAppFeedback(e.target.value)}
+              placeholder="Tell us what you think..."
+              className="border-none focus-visible:ring-0 min-h-[90px] p-0 resize-none text-sm placeholder:text-muted-foreground bg-transparent"
+            />
+          </div>
+          <button
+            onClick={handleFeedbackSubmit}
+            disabled={isSubmittingFeedback || !appFeedback.trim()}
+            className="w-full h-11 bg-[#F4511E] hover:bg-[#D94315] text-white font-bold text-sm rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {isSubmittingFeedback ? 'Sending...' : 'Send Feedback'}
+          </button>
+        </div>
+
+        {user ? (
+          <button
+            onClick={handleLogout}
+            className="w-full h-16 bg-muted hover:bg-muted/80 active:scale-[0.99] text-foreground font-bold text-lg rounded-2xl mt-8 transition-all flex items-center justify-center gap-2"
+          >
+            <LogOut className="size-5" />
+            Log Out
+          </button>
+        ) : (
+          <Link href="/signup" className="w-full mt-8 block">
+            <button className="w-full h-12 bg-[#F4511E] hover:bg-[#D94315] text-white font-bold text-base rounded-xl shadow-md shadow-[#F4511E]/15 transition-all active:scale-[0.98] flex items-center justify-center">
+              Sign Up / Log In
+            </button>
+          </Link>
+        )}
       </div>
     </div>
   );

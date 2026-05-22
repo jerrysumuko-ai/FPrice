@@ -21,8 +21,21 @@ create table if not exists stations (
   last_updated  text       not null default '',
   phone         text,
   logo_url      text,
+  place_name    text,
+  status        text       not null default 'approved'
+                           check (status in ('pending', 'approved', 'rejected')),
   created_at    timestamptz not null default now()
 );
+
+-- Add status column to existing tables (safe if already present)
+do $$ begin
+  alter table stations add column if not exists status text not null default 'approved'
+    check (status in ('pending', 'approved', 'rejected'));
+exception when others then null;
+end $$;
+
+-- Add place_name column to existing tables (safe if already present)
+alter table stations add column if not exists place_name text;
 
 create table if not exists news_alerts (
   id          text primary key,
@@ -50,9 +63,6 @@ create table if not exists price_reports (
 );
 
 -- ---- TABLE-LEVEL GRANTS ----------------------------------------------------
--- Tables created via raw SQL aren't exposed to the API roles by default.
--- These grants make the tables visible to PostgREST; RLS policies below
--- still control which rows each role can actually read/write.
 
 grant usage on schema public to anon, authenticated, service_role;
 
@@ -61,15 +71,14 @@ grant select         on public.news_alerts   to anon, authenticated;
 grant insert         on public.feedback      to anon, authenticated;
 grant insert         on public.price_reports to anon, authenticated;
 
-grant all on public.stations,      public.news_alerts,
-         public.feedback,      public.price_reports
+grant all on public.stations, public.news_alerts,
+            public.feedback,  public.price_reports
   to service_role;
 
 -- ---- ROW LEVEL SECURITY ----------------------------------------------------
--- Public can READ stations and news (so anon key works in the browser).
--- Public can INSERT feedback, price reports, and new station registrations
--- (this app is community-driven; tighten later when auth is added).
--- Nothing else is exposed via the anon key.
+-- Anon users can only READ approved stations.
+-- Anon users can INSERT new stations (they land as 'pending').
+-- You approve them by updating status = 'approved' directly in Supabase.
 
 alter table stations      enable row level security;
 alter table news_alerts   enable row level security;
@@ -82,11 +91,13 @@ drop policy if exists "news_alerts_select_public"    on news_alerts;
 drop policy if exists "feedback_insert_public"       on feedback;
 drop policy if exists "price_reports_insert_public"  on price_reports;
 
+-- Only approved stations are visible to the public
 create policy "stations_select_public"
-  on stations for select using (true);
+  on stations for select using (status = 'approved');
 
+-- Anyone can submit a station (it starts as pending)
 create policy "stations_insert_public"
-  on stations for insert with check (true);
+  on stations for insert with check (status = 'pending');
 
 create policy "news_alerts_select_public"
   on news_alerts for select using (true);
@@ -97,28 +108,23 @@ create policy "feedback_insert_public"
 create policy "price_reports_insert_public"
   on price_reports for insert with check (true);
 
--- ---- SEED DATA -------------------------------------------------------------
+-- ---- STORAGE BUCKET --------------------------------------------------------
+-- Run this separately in Supabase → SQL Editor to create the photo bucket:
+--
+--   insert into storage.buckets (id, name, public)
+--   values ('station-photos', 'station-photos', true)
+--   on conflict (id) do nothing;
+--
+--   drop policy if exists "station_photos_insert" on storage.objects;
+--   create policy "station_photos_insert" on storage.objects
+--     for insert with check (bucket_id = 'station-photos');
+--
+--   drop policy if exists "station_photos_select" on storage.objects;
+--   create policy "station_photos_select" on storage.objects
+--     for select using (bucket_id = 'station-photos');
 
-insert into stations
-  (id, name, address, petrol_price, diesel_price, is_open, distance, rating, lat, lng, image, last_updated)
-values
-  ('mobil-marian',            'Mobile (Mobile) Marian',     'Marian Road, Calabar',                  650, 1100, true, '0.5km', 4.8, 4.965, 8.335, 'https://picsum.photos/seed/mobil-marian/600/400', '10:32 AM'),
-  ('uddy-king-parliamentary', 'Uddy King Parliamentary',    'Parliamentary Extension, Calabar',      640, 1080, true, '1.5km', 4.4, 4.982, 8.342, 'https://picsum.photos/seed/uddy-parl/600/400',    '09:45 AM'),
-  ('shafa',                   'Shafa Energy',               'Murtala Mohammed Highway, Calabar',     630, 1050, true, '2.1km', 4.2, 4.995, 8.338, 'https://picsum.photos/seed/shafa/600/400',        '11:15 AM'),
-  ('uddy-king-effio-ette',    'Uddy King Effio-Ette',       'Effio-Ette Junction, Calabar',          645, 1090, true, '1.8km', 4.5, 4.972, 8.348, 'https://picsum.photos/seed/uddy-effio/600/400',   '10:50 AM'),
-  ('nnpc-highway',            'NNPC Mega Station',          'Murtala Mohammed Highway, Calabar',     610, 1020, true, '3.0km', 4.1, 5.012, 8.331, 'https://picsum.photos/seed/nnpc-cal/600/400',     '08:20 AM')
-on conflict (id) do update set
-  name         = excluded.name,
-  address      = excluded.address,
-  petrol_price = excluded.petrol_price,
-  diesel_price = excluded.diesel_price,
-  is_open      = excluded.is_open,
-  distance     = excluded.distance,
-  rating       = excluded.rating,
-  lat          = excluded.lat,
-  lng          = excluded.lng,
-  image        = excluded.image,
-  last_updated = excluded.last_updated;
+-- ---- SEED DATA -------------------------------------------------------------
+-- No seed stations. All stations are added via the app's "Add Station" form.
 
 insert into news_alerts (id, title, content, date, type) values
   ('n1', 'Upcoming Price Adjustment',

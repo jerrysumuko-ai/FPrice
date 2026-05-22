@@ -15,6 +15,7 @@ export async function fetchStations(): Promise<FuelStation[]> {
   const { data, error } = await supabase
     .from('stations')
     .select('*')
+    .eq('status', 'approved')
     .order('name', { ascending: true });
   if (error) {
     console.error('fetchStations error:', error);
@@ -44,7 +45,8 @@ export async function fetchStationsByIds(ids: string[]): Promise<FuelStation[]> 
   const { data, error } = await supabase
     .from('stations')
     .select('*')
-    .in('id', ids);
+    .in('id', ids)
+    .eq('status', 'approved');
   if (error) {
     console.error('fetchStationsByIds error:', error);
     return [];
@@ -93,6 +95,18 @@ export async function submitPriceReport(args: {
   if (error) throw error;
 }
 
+export async function uploadStationPhoto(file: File): Promise<string> {
+  const supabase = createClient();
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const path = `public/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage
+    .from('station-photos')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('station-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 function slugify(input: string): string {
   return (
     input
@@ -108,16 +122,14 @@ export async function createStation(args: {
   address: string;
   petrolPrice: number;
   dieselPrice: number;
+  lat: number;
+  lng: number;
+  photoUrl: string;
   phone?: string;
-  logoUrl?: string;
+  placeName?: string;
 }): Promise<FuelStation> {
   const supabase = createClient();
   const id = `${slugify(args.name)}-${Date.now().toString(36)}`;
-  const now = new Date();
-  const lastUpdated = now.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   const { data, error } = await supabase
     .from('stations')
@@ -130,12 +142,14 @@ export async function createStation(args: {
       is_open: true,
       distance: '',
       rating: 0,
-      lat: 0,
-      lng: 0,
-      image: `https://picsum.photos/seed/${id}/600/400`,
-      last_updated: lastUpdated,
+      lat: args.lat,
+      lng: args.lng,
+      image: args.photoUrl,
+      last_updated: new Date().toISOString(),
       phone: args.phone ?? null,
-      logo_url: args.logoUrl ?? null,
+      logo_url: null,
+      place_name: args.placeName ?? null,
+      status: 'pending',
     })
     .select()
     .single();
